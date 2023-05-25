@@ -1,0 +1,5539 @@
+syntax = "proto2";
+
+package foody_base;
+
+//option go_package = "./foody_base";
+
+enum Available {
+  UNAVAILABLE = 0;
+  AVAILABLE = 1;
+}
+
+// Status 表示上下架状态
+enum ShelveState {
+  UNSHELVED = 0; // 下架
+  SHELVED = 1; // 上架
+}
+
+// OptionSelectMode 表示一个 option group 中的 options 的选择模式。
+enum OptionSelectMode {
+  MODE_EQUAL = 1; // 恰好选 X 个
+  MODE_GREAT_EQUAL = 2; // 最多选 X 个
+  MODE_LESS_EQUAL = 3; // 至少选 X 个
+  MODE_BETWEEN_INCLUSIVE = 4; // 必须选 X 到 Y 个
+  MODE_ANY = 5; // 随便选
+}
+
+enum CartItemStatus {
+  NORMAL = 0;
+  DISH_UNAVAILABLE = 11;
+  DISH_DELETED = 12;
+  DISH_OUT_OF_TIME = 13;
+  DISH_LISTING_STATUS_INACTIVE = 14;
+  OPTION_GROUP_UNSHELVED = 21;
+  OPTION_GROUP_DELETED = 22;
+  OPTION_GROUP_INVALIDATE = 23;
+  OPTION_UNAVAILABLE = 31;
+  OPTION_DELETED = 32;
+  CART_ITEM_UPDATED = 40;
+  CART_ITEM_DELETED = 41;
+  ITEM_DISCOUNT_OUT_OF_STOCK = 50;
+  FLASH_SALE_OUT_OF_STOCK = 61;
+  FLASH_SALE_ENDED = 62;
+  FLASH_SALE_INACTIVE = 63;
+}
+
+enum OrderStatus {
+  ORDER_CREATED = 0; // 已生成
+  ORDER_APPROVED = 100; // 订单已通过审核
+  ORDER_PAID = 200; // 订单已支付
+  ORDER_MERCHANT_CONFIRMED = 300; // 商家已接单
+  ORDER_ASSIGNED = 400; // 订单已派单（是否需要新增）
+  ORDER_DELIVERY_ACCEPTED = 410; // 骑手已接单
+  ORDER_DELIVERY_ARRIVED_STORE = 420; //骑手已到店
+  ORDER_DRIVER_RECONFIRMED = 425; // 骑手已下单
+  ORDER_DELIVERY_PICKED_UP = 430; // 骑手已取货
+  ORDER_DELIVERED = 440; // 订单已送达
+  ORDER_COMPLETED = 800; // 订单已完结
+  ORDER_CANCELING = 900; // 订单取消中
+  ORDER_CANCELED = 910; //订单已取消
+}
+
+enum SPXOrderShowStatus{
+  SPX_ORDER_SHOW_CREATED = 0; // 已生成
+  SPX_ORDER_SHOW_PAID = 100; // 订单已支付
+  SPX_ORDER_SHOW_APPROVED = 200; // 订单已通过审核
+  SPX_ORDER_SHOW_EXPRESS_CREATED = 300; // 订单待分配
+  SPX_ORDER_SHOW_EXPRESS_ASSIGNED = 330; // 订单已指派
+  SPX_ORDER_SHOW_EXPRESS_ARRIVED = 340; // 骑手已到达
+  SPX_ORDER_SHOW_EXPRESS_PICKEDUP = 350; // 订单已送达
+  SPX_ORDER_SHOW_DELIVERY_ON_HOLD = 370; // 配送异常
+  SPX_ORDER_SHOW_DELIVERED = 400; // 订单已送达
+  SPX_ORDER_SHOW_RETURNING = 500; //订单退货中
+  SPX_ORDER_SHOW_RETURNING_ON_HOLD = 510; // 退货异常
+  SPX_ORDER_SHOW_RETURNED = 550; // 订单已退货
+  SPX_ORDER_SHOW_COMPLETED = 600; // 订单已完结
+  SPX_ORDER_SHOW_CANCELING = 700; // 订单取消中
+  SPX_ORDER_SHOW_CANCELED = 710; //订单已取消
+}
+
+enum SPXOrderStatus {
+  SPX_ORDER_CREATED = 0; // 已生成
+  SPX_ORDER_APPROVED = 100; // 订单已通过审核
+  SPX_ORDER_PAID = 200; // 订单已支付
+  SPX_ORDER_ONDELIVERING = 210; // 订单配送中
+  SPX_ORDER_DELIVERED = 440; // 订单已送达
+  SPX_ORDER_COMPLETED = 800; // 订单已完结
+  SPX_ORDER_CANCELING = 900; // 订单取消中
+  SPX_ORDER_CANCELED = 910; //订单已取消
+  SPX_ORDER_RETURNED = 1000; // 订单已退货
+}
+
+enum PaymentPlatform {
+  PLATFORM_UNKNOWN = 0;
+  PLATFORM_SPM = 1; // SPM 支付平台：COD也包含在SPM中
+  PLATFORM_PAOTANG = 2; // TH PaoTang 支付平台
+}
+
+// see https://confluence.shopee.io/pages/viewpage.action?pageId=15468775#PaymentDrawer(SPM)-ChannelsListChannelsList
+// MY/TH 地区支付渠道： https://confluence.shopee.io/pages/viewpage.action?pageId=549397047
+enum PaymentMethod {
+  PAY_UNKNOWN = 0; // 未知支付方式
+  PAY_COD = 1; // 货到付款(SPX收货人付款)
+  PAY_SHOPEE_PAY_WALLET = 2; // SHOPEE PAY WALLET= shopee wallet V2  AirPay / Wallet E-wallet (Airpay/ ShopeePay)
+  PAY_VIRTUAL_ACCOUNT = 3; // virtual account
+  PAY_INDOMARET = 4; // indomaret
+  PAY_ALFAMART = 5; // alfamart
+  PAY_BANK = 6; // bank
+
+  PAY_CYBERSOURCE = 7;        // Credit/Debit Card
+  PAT_RPP_ONLINE_BANKING = 8;    // RPP iBanking
+  PAY_IPAY88_IBANKING = 9;    // iPay88 iBanking
+  PAY_MOLPAY_CASH = 10;       //(Driver top-up 特有) Offline Counter(7-11) / shopeeFood711
+  PAY_APCC = 11;              // Credit/Debit Card
+  PAY_AIRPAY_WALLET = 12;     // E-wallet  Airpay(TH地区没有shopeePay 使用的是Airpay)
+  PAY_AIRPAY_GIRO = 13;       // Giro ShopeePay
+  PAY_IBANKING_AIRPAY = 14;   // iBanking
+  PAY_K_PLUS = 15;            // mBanking (Jump to bank app)
+  PAY_ATM_BILL_PAYMENT = 16;  // offline ATM
+  PAY_COD_SENDER = 17;    // 发货人付款
+  PAY_BY_SHOPEE = 18;     // Shopee主站SPX月结
+  PAY_SHOPEE_PAY_LATER = 20; // Shopee Pay Later 类似花呗
+}
+
+enum PaymentStatus {
+  PAYMENT_CREATED = 0; // 支付单已创建
+  PAYMENT_PENDING = 1; // 等待支付
+  PAYMENT_PAID = 2; // 已支付
+  PAYMENT_FAILED = 3; // 支付失败
+  PAYMENT_CLOSED = 4; // 支付关闭
+  PAYMENT_EXPIRED = 5; // 支付超时
+  PAYMENT_CANCELED = 6; // 取消支付
+}
+
+enum RefundStatus {
+  REFUND_CREATED = 1; // 退款请求已创建
+  REFUND_APPROVED = 2; // 退款请求已通过审核 // TODO: 已废弃
+  REFUND_REJECTED = 3; // 退款请求已拒绝 // TODO: 已废弃
+  REFUND_PENDING = 4; // 退款中
+  REFUND_COMPLETED = 5; // 退款完成
+  REFUND_FAILED = 6; // 退款失败
+}
+
+enum OrderSource {
+  SOURCE_SHOPEE = 1;
+  SOURCE_FOODY = 2;
+}
+
+enum CancelSource {
+  CANCEL_DEFAULT = 0;
+  CANCEL_BUYER = 1;
+  CANCEL_ADMIN = 2;
+  CANCEL_DRIVER = 3;
+  CANCEL_SYSTEM = 4;
+  CANCEL_MERCHANT = 5;
+  CANCEL_ORDER_MAKER = 6; // SPX only
+  CANCEL_SENDER = 7; // SPX only
+  CANCEL_RECIPIENT = 8; // SPX only
+  CANCEL_OTHER = 9;
+  CANCEL_SLS = 10;
+}
+
+// 改单的来源
+enum RewriteSource {
+  REWRITE_NONE = 0;
+  //  REWRITE_BUYER = 1;
+  //  REWRITE_ADMIN = 2;
+  REWRITE_DRIVER = 3;
+  //  REWRITE_ROBOT = 4;
+  REWRITE_MERCHANT = 5;
+}
+
+// ReturnSource和CancelSource的值要保持一致
+enum ReturnSource {
+  RETURN_BUYER = 1;
+  RETURN_ADMIN = 2;
+  RETURN_DRIVER = 3;
+  RETURN_SYSTEM = 4;
+  RETURN_MERCHANT = 5;
+}
+
+// https://confluence.shopee.io/display/SPFOODY/5.3.2.7+Order+System
+// 1. 记得同步到ReturnReason
+// 2. 记得修改returnReasonMap
+enum CancelReason {
+  RESERVED = 0;
+  //1~50 buyer
+  BUYER_NOT_RECEIVE = 1;
+  BUYER_PLACED_WRONG_ORDER = 2; // 超时取消
+  BUYER_CHANGE_PAYMENT_METHOD = 3;
+  BUYER_HAS_CHANGED_PLAN = 4;
+  BUYER_WANT_CANCEL = 5;
+  BUYER_WANT_CANCEL_DRIVER_SAID = 6;
+  BUYER_INPUT_WRONG_ADDRESS = 7;
+  BUYER_FORGET_USE_VOUCHER = 8;
+  BUYER_CHANGE_ORDER_PRICE = 9;
+  BUYER_LOST_CONTACT = 10;
+  BUYER_FAKE_ORDER = 11;
+  BUYER_DRIVER_ASKED = 12;
+  BUYER_DRIVER_LOST_CONTACT = 13;
+  BUYER_DRIVER_NO_ENOUGH_MONEY = 14;
+  BUYER_DRIVER_TOO_FAR = 15;
+  BUYER_WAITED_TOO_LONG = 16;
+  BUYER_ITEMS_UNAVAILABLE = 17;
+  BUYER_PRICE_CHANGED = 18;
+  BUYER_RESTAURANT_CLOSED = 19;
+  BUYER_OTHERS = 50;
+
+  //51~100 merchant
+  MERCHANT_OUT_OF_STOCK = 51;
+  MERCHANT_STORE_WAS_BUSY = 52;
+  MERCHANT_STORE_WAS_CLOSED = 53;
+  MERCHANT_MISSED_ORDER = 54;
+  MERCHANT_REJECT_ORDER = 55;
+  MERCHANT_OTHERS = 100;
+
+  //101~150 driver
+  DRIVER_LATE_DELIVERY = 101;
+  DRIVER_CANNOT_DELIVERY = 102;
+  DRIVER_FIND_NO_RESTAURANT = 103;
+  DRIVER_FIND_NO_BUYER = 104;
+  DRIVER_LOW_DELIVERY_QUALITY = 105;
+  DRIVER_NO_ENOUGH_MONEY = 106;
+  DRIVER_ACCIDENTALLY_TAKE_ORDER = 107;
+  DRIVER_BROKEN_VEHICLE = 108;
+  DRIVER_BUYER_ASKED_BECAUSE_PRICE_CHANGED = 109;
+  DRIVER_ITEMS_UNAVAILABLE = 110;
+  DRIVER_BUYER_ASKED = 111;
+  DRIVER_RESTAURANT_CLOSED = 112;
+  DRIVER_RESTAURANT_REJECTED = 113;
+  DRIVER_FAKE_ORDER = 114;
+  DRIVER_OTHERS = 150;
+
+  //151~200 platform
+  PLATFORM_CANNOT_MATCH_DRIVER = 151;
+  PLATFORM_PAYMENT_FAILED = 152;
+  PLATFORM_ORDER_EXPIRED = 153;
+  PLATFORM_ORDER_EXPIRED_UNCONFIRMED = 154;
+  PLATFORM_ADMIN_CLOSED_AND_ALGO_REASSIGNED = 156;
+
+
+
+  // SPX Order cancel reason
+  // https://docs.google.com/spreadsheets/d/1lymx1sfZpp69ZRgvve_yrN61IzSarygDX_JkrRmZer8/edit#gid=338141721
+  EXPRESS_OTHERS = 1000;
+  EXPRESS_BAD_WEATHER = 1001;
+  EXPRESS_DRIVER_ACCIDENTALLY_TOOK_ORDER = 1002;
+  EXPRESS_DRIVER_VEHICLE_BROKEN_TO_SELLER = 1003;
+  EXPRESS_DRIVER_COULD_NOT_FIND_SELLER = 1004;
+  EXPRESS_DRIVER_REPORT_SELLER_CANNOT_CONTACT = 1005;
+  EXPRESS_DRIVER_REPORT_SELLER_ASKED_TO_CANCEL = 1006;
+  EXPRESS_PICK_UP_ADDRESS_IS_TOO_FAR = 1007;
+  EXPRESS_PKG_TOO_BIG_TOO_HEAVY_TO_DELIVERY = 1008;
+  EXPRESS_PKG_IS_NOT_WELL_PREPARED = 1009;
+  EXPRESS_PROHIBITED_ITEM = 1010;
+  EXPRESS_STORE_WAS_CLOSED = 1011;
+  EXPRESS_CUSTOMER_CHANGE_PAYMENT_METHOD = 1012;
+  EXPRESS_CUSTOMER_HAS_CHANGE_PLAN = 1013;
+  EXPRESS_CUSTOMER_INPUT_WRONG_INFO = 1014;
+  EXPRESS_CUSTOMER_FORGOT_USE_VOUCHER = 1015;
+  EXPRESS_DRIVER_ASKED_CUSTOMER_TO_CANCEL = 1016;
+  EXPRESS_CUSTOMER_CAN_NOT_CONTACT_DRIVER = 1017;
+  EXPRESS_DRIVER_IS_TOO_FAR = 1018;
+  EXPRESS_CUSTOMER_HAS_WAITED_TOO_LONG = 1019;
+  EXPRESS_CUSTOMER_REGRET_AFTER_SUBMIT = 1020;
+  EXPRESS_DRIVER_REJECT_MY_ITEM = 1021;
+  EXPRESS_CAN_NOT_MATCH_DRIVER = 1022;
+  EXPRESS_PAYMENT_FAILED = 1023;
+  EXPRESS_SHOPEE_INDICATES_THIS_IS_FRAUD = 1024;
+  EXPRESS_FAILED_TO_DECODE_LOGLAT = 1025;
+  EXPRESS_LOST = 1026;
+  EXPRESS_DAMAGE = 1027;
+  EXPRESS_REACHED_DRIVER_DROPPING_LIMIT = 1028;
+  EXPRESS_CANCELED_BY_UPSTREAM_SYSTEM = 1029;
+
+
+  EXPRESS_DRIVER_VEHICLE_BROKEN = 2000;
+  EXPRESS_INSISTS_CANCEL = 2001;
+  EXPRESS_INSISTS_RETURN = 2002;
+  EXPRESS_CUSTOMER_REPORT_RETURN_TOO_LONG = 2003;
+  EXPRESS_DRIVER_IN_TRAFFIC_ACCIDENT = 2004;
+  EXPRESS_DRIVER_BECOME_VICTIM_OF_CRIME = 2005;
+  EXPRESS_RIOT = 2006;
+  EXPRESS_NATURAL_DISASTER = 2007;
+  EXPRESS_DRIVER_REPORT_ROAD_BLOCKED = 2008;
+  EXPRESS_DRIVER_REPORT_CAN_NOT_FIND_RECIPIENT = 2009;
+  EXPRESS_DRIVER_REPORT_RECIPIENT_REJECTED_ITEM = 2010;
+  EXPRESS_INSISTS_TO_RETURN_ORDER = 2011;
+  EXPRESS_RECIPIENT_REPORT_FAKE_ORDER = 2012;
+  EXPRESS_ITEM_TAMPERED = 2013;
+  EXPRESS_SENDER_NOT_ACCEPT_ITEM = 2014;
+  EXPRESS_CUSTOMER_CANNOT_CONTACT = 2015;
+
+
+
+  // Food Order cancel reason
+  CUSTOMER_NOT_RECEIVE_FOOD = 10001;
+  CUSTOMER_PLACED_WRONG_ORDER = 10002; // 超时取消
+  CUSTOMER_CHANGE_PAYMENT_METHOD = 10003;
+  CUSTOMER_HAS_CHANGED_PLAN = 10004;
+  CUSTOMER_WANT_CANCEL = 10005;
+  CUSTOMER_WANT_CANCEL_DRIVER_SAID = 10006;
+  CUSTOMER_INPUT_WRONG_ADDRESS = 10007;
+  CUSTOMER_FORGET_USE_VOUCHER = 10008;
+  ORDER_PRICE_CHANGED = 10009;
+  CUSTOMER_LOST_CONTACT = 10010;
+  FAKE_ORDER = 10011;
+  DRIVER_ASK_TO_CANCEL = 10012;
+  DRIVER_LOST_CONTACT = 10013;
+  DRIVER_NO_HAVE_ENOUGH_MONEY = 10014;
+  DRIVER_TOO_FAR = 10015;
+  CUSTOMER_WAITED_TOO_LONG = 10016;
+  ITEMS_UNAVAILABLE = 10017;
+  PRICE_CHANGED = 10018;
+  RESTAURANT_IS_CLOSED = 10019;
+  CUSTOMER_WANTS_TO_EDIT_ORDER = 10020;
+  CUSTOMER_REGRET_AFTER_SUBMIT = 10021;
+  OTHERS_REASON = 10050;
+  RESTAURANT_WAS_BUSY = 10052;
+  RESTAURANT_MISSED_ORDER = 10054;
+  DRIVER_IS_UNRESPONSIVE = 10057;
+  DRIVER_ASKED_TO_CANCEL = 10058;
+  LATE_DELIVERY = 10101;
+  DRIVER_CANNOT_CONTINUE_DELIVERY = 10102;
+  DRIVER_CANNOT_FIND_RESTAURANT = 10103;
+  DRIVER_CANNOT_CONTACT_BUYER = 10104;
+  LOW_DELIVERY_QUALITY = 10105;
+  DRIVER_ACCIDENTALLY_TOOK_ORDER = 10107;
+  DRIVER_VEHICLE_BROKEN = 10108;
+  DRIVER_REPORT_CUSTOMER_ASKED_CANCEL = 10111;
+  RESTAURANT_REJECT_ORDER = 10113;
+  DRIVER_REPORT_FAKE_ORDER = 10114;
+  DRIVER_MOTOR_BROKEN_ON_WAY_TO_MERCHANT = 10115;
+  DRIVER_MOTOR_BROKEN_ON_WAY_TO_BUYER = 10116;
+  DRIVER_LONG_QUEUE_IN_THE_RESTAURANT = 10117;
+  DRIVER_BAD_WEATHER = 10118;
+  CANNOT_MATCH_DRIVER = 10151;
+  PAYMENT_FAILURE = 10152;
+  PAYMENT_TIMEOUT = 10153;
+  ORDER_EXPIRED_UNCONFIRMED = 10154;
+  LOW_COMPLETED_RATE_PREDICATED = 10155;
+
+  SYSTEM_IS_NOT_RESPONDING = 10160;
+  MERCHANT_IS_UNRESPONSIVE = 10161;
+  DRIVER_DO_NOT_PICK_FOOD = 10162;
+  RESTAURANT_NOT_OPERATION_WITH_SHOPEEFOOD = 10163;
+  FOOD_IS_NOT_READY_WHEN_DRIVER_PICK_UP = 10164;
+  ACTUAL_PRICE_NOT_THE_SAME_AS_LIST_PRICE = 10165;
+  CUSTOMER_ADDRESS_NOT_FOUND = 10166;
+  CUSTOMER_DO_NOT_ACCEPT_THE_ORDER = 10167;
+  IMPROPER_FOOD_HANDING_BY_DRIVER = 10168;
+
+
+}
+
+// 履约单状态
+enum DeliveryStatus {
+  DELIVERY_CREATED = 1; // 履约单已创建
+  DELIVERY_CONFIRMED = 2; // 骑手已接单
+  DELIVERY_PICKUP_ARRIVED = 3; // 取件点已到达
+  DELIVERY_PICKED_UP = 4; // 已取件
+  DELIVERY_COMPLETED = 5; // 骑手已送达
+  DELIVERY_CANCELED = 6; // 履约单已取消
+  DELIVERY_DROPPING = 7; // 履约单取消中
+}
+
+// 配送单状态
+enum DriverDeliveryStatus {
+  DRIVER_DELIVERY_CONFIRMED = 100; // 骑手已接单
+  DRIVER_DELIVERY_COMPLETED = 200; // 配送单已送达
+  DRIVER_DELIVERY_CANCELED = 300; //配送单已取消
+}
+
+enum PartnerType {
+  PARTNER_LISTED = 1; // 非合作方（纯展示）
+  PARTNER_NORMAL = 2; // 普通合作方
+  PARTNER_STAR = 3; // 星级合作方
+  PARTNER_MALL = 4; // 品牌合作方
+  PARTNER_SUPER = 5; // 至尊合作方
+}
+
+enum StoreStatus {
+  STORE_INACTIVE = 1; // 店铺不可见（在买家端）
+  STORE_ACTIVE = 2; // 店铺可见（在买家端）
+}
+
+enum DisplayOpeningStatus {
+  DisplayOpeningStatus_CLOSED = 1;
+  DisplayOpeningStatus_OPEN = 2;
+  DisplayOpeningStatus_PAUSE = 3;
+}
+
+enum WalletStatus {
+  WALLET_NORMAL = 1;
+}
+
+enum PayoutMode {
+  PAYOUT_NONE = 0;
+  MANUAL = 1; // 人工打款
+  SPM = 2; // SPM打款
+}
+
+enum WalletType {
+  WALLET_TYPE_DRIVER = 1;
+  WALLET_TYPE_MERCHANT = 2;
+}
+
+enum TransactionType {
+  CREDIT_TOP_UP = 1;
+  DEBIT_WITHDRAWAL = 2;
+  CREDIT_WITHDRAWAL_REFUND = 3;
+  CREDIT_SHIPPING_FEE = 4;
+  CREDIT_ORDER_ADJUSTMENT = 5;
+  DEBIT_ORDER_ADJUSTMENT = 6;
+  CREDIT_MANUAL_ADJUSTMENT = 7;
+  DEBIT_MANUAL_ADJUSTMENT = 8;
+  DEBIT_ADVANCED_DEPOSIT = 9;
+  CREDIT_DEPOSIT_REFUND = 10;
+  DEBIT_INSTALLMENT = 11;
+  CREDIT_TIP = 12;
+  CREDIT_INCENTIVE_BONUS = 13;
+  DEBIT_FINE = 14;
+  CREDIT_FINE_REFUND = 15;
+  CREDIT_FINE = 16 [deprecated = true]; // 业务钱包写入旧流水时需要，后来不写入旧流水表了，所以目前用不上
+  DEBIT_FINE_REFUND = 17 [deprecated = true]; // 业务钱包写入旧流水时需要，后来不写入旧流水表了，所以目前用不上
+  CREDIT_INCENTIVE_SETTLEMENT_BONUS = 18;
+  CREDIT_PARKING_FEE = 19;
+  CREDIT_BAD_WEATHER_FEE = 20;
+  CREDIT_HOLIDAY_SERVICE_FEE = 21;
+  CREDIT_LATE_NIGHT_FEE = 22;
+
+  INSTANT_SHOPEE_CREDIT_SHIPPING_FEE = 101;
+  INSTANT_SHOPEE_CREDIT_MANUAL_ADJUSTMENT = 102;
+  INSTANT_SHOPEE_DEBIT_MANUAL_ADJUSTMENT = 103;
+  INSTANT_SHOPEE_DEBIT_FINE = 104;
+  INSTANT_SHOPEE_CREDIT_FINE_REFUND = 105;
+  INSTANT_SHOPEE_CREDIT_TIP = 106;
+
+  INSTANT_DELIVERY_CREDIT_SHIPPING_FEE = 201;
+  INSTANT_DELIVERY_DEBIT_ADVANCED_DEPOSIT = 202;
+  INSTANT_DELIVERY_CREDIT_DEPOSIT_REFUND = 203;
+  INSTANT_DELIVERY_CREDIT_ORDER_ADJUST = 204;
+  INSTANT_DELIVERY_DEBIT_ORDER_ADJUST = 205;
+  INSTANT_DELIVERY_CREDIT_MANUAL_ADJUST = 206;
+  INSTANT_DELIVERY_DEBIT_MANUAL_ADJUST = 207;
+  INSTANT_DELIVERY_DEBIT_FINE = 208;
+  INSTANT_DELIVERY_CREDIT_FINE_REFUND = 209;
+  INSTANT_DELIVERY_CREDIT_TIP = 210;
+}
+
+enum RecordTag {
+  TAG_FINE = 1;
+  TAG_FINE_REFUND = 2;
+  TAG_FOMS_INSTALLMENT = 3;
+  TAG_ADVANCE_DEPOSIT = 4;
+  TAG_DEPOSIT_REFUND = 5;
+  TAG_SHIPPING_FEE = 6;
+  TAG_ORDER_ADJUSTMENT = 7;
+  TAG_TIP = 8;
+  TAG_INCENTIVE_SETTLEMENT_BONUS = 9;
+  TAG_PARKING_FEE = 10;
+  TAG_BAD_WEATHER_FEE = 11;
+  TAG_HOLIDAY_SERVICE_FEE = 12;
+  TAG_LATE_NIGHT_FEE = 13;
+
+  TAG_INSTANT_SHOPEE_CREDIT_SHIPPING_FEE = 101;
+  TAG_INSTANT_SHOPEE_CREDIT_MANUAL_ADJUSTMENT = 102;
+  TAG_INSTANT_SHOPEE_DEBIT_MANUAL_ADJUSTMENT = 103;
+  TAG_INSTANT_SHOPEE_DEBIT_FINE = 104;
+  TAG_INSTANT_SHOPEE_CREDIT_FINE_REFUND = 105;
+  TAG_INSTANT_SHOPEE_CREDIT_TIP = 106;
+
+  TAG_INSTANT_DELIVERY_CREDIT_SHIPPING_FEE = 201;
+  TAG_INSTANT_DELIVERY_DEBIT_ADVANCED_DEPOSIT = 202;
+  TAG_INSTANT_DELIVERY_CREDIT_DEPOSIT_REFUND = 203;
+  TAG_INSTANT_DELIVERY_CREDIT_ORDER_ADJUST = 204;
+  TAG_INSTANT_DELIVERY_DEBIT_ORDER_ADJUST = 205;
+  TAG_INSTANT_DELIVERY_CREDIT_MANUAL_ADJUST = 206;
+  TAG_INSTANT_DELIVERY_DEBIT_MANUAL_ADJUST = 207;
+  TAG_INSTANT_DELIVERY_DEBIT_FINE = 208;
+  TAG_INSTANT_DELIVERY_CREDIT_FINE_REFUND = 209;
+  TAG_INSTANT_DELIVERY_CREDIT_TIP = 210;
+}
+
+enum SettlementSource {
+  SOURCE_ALL = 0;
+  SOURCE_DRIVER_DELIVERY_ORDER_SHIPPING_FEE = 1; // 对于骑手结算实际是指 shipping fee
+  SOURCE_ORDER = 2; // 对于骑手结算实际是指 order adjustment
+  SOURCE_DELIVERY_ORDER_PARKING_FEE = 3;
+  SOURCE_ORDER_BAD_WEATHER_FEE = 4;
+  SOURCE_ORDER_HOLIDAY_SERVICE_FEE = 5;
+  SOURCE_ORDER_LATE_NIGHT_FEE = 6;
+}
+
+//调shopee pay 接口返回的错误码
+enum SettlementErrorCode {
+  SSP_SERVER_ERROR = -1;
+  SSP_SUCCESS = 0;
+  SSP_PERMISSION_DENIED = 2;
+
+  SSP_MERCHANT_EXT_ID_EMPTY = 450;
+  SSP_STORE_EXT_ID_EMPTY = 451;
+  SSP_REFERENCE_ID_EMPTY = 452;
+  SSP_AMOUNT_FORMAT_ERROR = 453;
+
+  SSP_MERCHANT_EXT_ID_NOT_FIND = 502;
+  SSP_STORE_EXT_ID_NOT_FIND = 503;
+  SSP_REFERENCE_ID_DUPLICATE = 504;
+  SSP_CLIENT_ID_ERROR = 505;
+
+  ESCROW_MERCHANT_SETTLEMENT_ERROR = 1001;
+}
+enum SettlementMode {
+  MODE_WALLET = 1;
+  MODE_OFFLINE = 2;
+}
+
+enum SettlementStatus {
+  SETTLEMENT_CREATED = 10;
+  SETTLEMENT_PENDING = 1;
+  SETTLEMENT_COMPLETED = 2;
+  SETTLEMENT_EXCEPTION = 3;
+  SETTLEMENT_CANCELED = 4;
+}
+
+enum SettlementCancelReason
+{
+  CANCEL_RESERVED = 0; //TODO: 暂时保留,后期PM确定在进行修改
+}
+
+enum SettlementType
+{
+  TYPE_SHIPPING_FEE = 1;
+  TYPE_ORDER_ADJUSTMENT = 2;
+}
+
+enum ReferenceType {
+  RELATED_SETTLEMENT = 1;           // 关联清算单
+  RELATED_DRIVER_APPLICATION = 2;  // 关联骑手申请单
+  RELATED_DRIVER_ADJUSTMENT = 3;  //关联运营调整单
+  RELATED_DELIVERY_ORDER = 4;      //关联配送单
+  RELATED_ORDER = 5;              //关联订单
+  RELATED_AFTER_SALE_ORDER = 6;    //关联售后单
+  RELATED_MERCHANT_WALLET_ADJUSTMENT = 7;    //关联商家人工调整单
+  RELATED_EXPRESS = 8;    //关联运单
+  RELATED_DRIVER_DELIVERY_ORDER = 9; // 关联骑手配送单
+}
+
+enum ServiceType {
+  TYPE_UNKNOWN = 0;
+  TYPE_FOOD = 1;
+  TYPE_SPX_INSTANT_SHOPEE = 2;
+  TYPE_SPX_INSTANT_DELIVERY = 3;
+}
+
+//证明文件
+message Certificate
+{
+  optional string hash = 1;
+  optional string name = 2;
+}
+
+enum RelationType {
+  DEFAULT_RELATION = 0;//默认空值
+  PARENT = 1;//父母
+  SPOUSE = 2;//伴侣
+  CHILD = 3;//子女
+  FRIEND = 4;//朋友
+  SIBLING = 5;//兄弟姐妹
+  RELATIVE = 6;//亲戚
+  OTHER = 7;//其他
+  MOTHER = 8; //母亲
+  FATHER = 9; //父亲
+}
+
+enum Source {
+  SOURCE_UNKOWN = 0;
+  SOURCE_ADMIN = 1;
+  SOURCE_MERCHANT = 2;
+  SOURCE_BUYER = 3;
+  SOURCE_DRIVER = 4;
+  SOURCE_CRONTAB = 5;
+  SOURCE_SPM = 6;
+  SOURCE_EVENT = 7;
+  SOURCE_STATISTICS = 8;
+  SOURCE_ToBAccount = 9;
+  SOURCE_FOMS = 10;
+  SOURCE_VENDOR = 11;
+  SOURCE_SYSTEM = 12;
+  SOURCE_UserCredit = 13;
+  SOURCE_PARTNERWeb = 14;
+}
+
+enum Responsibility {
+  UNKNOWN = 0;
+  BUYER = 1;
+  DRIVER = 2;
+  MERCHANT = 3;
+  PLATFORM = 4;
+}
+
+enum Proposer {
+  PROPOSER_UNKNOWN = 0;
+  PROPOSER_BUYER = 1;
+  PROPOSER_DRIVER = 2;
+  PROPOSER_MERCHANT = 3;
+  PROPOSER_PLATFORM = 4;
+  PROPOSER_ORDER_MAKER = 5; // SPX Only
+  PROPOSER_SENDER = 6; // SPX Only
+  PROPOSER_RECIPIENT = 7; // SPX Only
+  PROPOSER_OTHER = 8;
+  PROPOSER_SLS = 9;
+  PROPOSER_ADMIN = 10;
+}
+
+enum EntityType {
+  ENTITY_TYPE_STORE = 1;
+  ENTITY_TYPE_CATALOG = 2;
+  ENTITY_TYPE_DISH = 3;
+  ENTITY_TYPE_OPTION_GROUP = 4;
+  ENTITY_TYPE_OPTION = 5;
+  ENTITY_TYPE_MERCHANT = 6;
+  ENTITY_TYPE_DRIVER = 7;
+  ENTITY_TYPE_ORDER = 8;
+  ENTITY_TYPE_STORE_SETTLEMENT = 9;
+  ENTITY_TYPE_DRIVER_SETTLEMENT = 10;
+  ENTITY_TYPE_ITEMDISCOUNT = 11;
+  ENTITY_TYPE_DELIVERY = 12;
+  ENTITY_TYPE_DELIVERY_CHECK_FAILURE = 13;
+  ENTITY_TYPE_DELIVERY_ASSIGNMENT = 14;
+  ENTITY_TYPE_DRIVER_INCENTIVE = 15;
+  ENTITY_TYPE_CONTENT = 16;
+  ENTITY_TYPE_TAG_TYPE = 17;
+  ENTITY_TYPE_TAG = 18;
+  ENTITY_TYPE_ITEM_SCHEDULE = 19;
+  ENTITY_TYPE_DRIVER_RATING = 20;
+  ENTITY_TYPE_DISH_RATING = 21;
+  ENTITY_TYPE_STORE_RATING = 22;
+  ENTITY_TYPE_PREDEFINED_KEYWORD = 23;
+  ENTITY_TYPE_AREA = 24;
+  ENTITY_TYPE_LOCATION_GROUP = 25;
+  ENTITY_TYPE_ALGO_PARAMETER_CONFIG = 26;
+  ENTITY_TYPE_OVERLAY = 27;
+  ENTITY_TYPE_DRIVER_APPLICANT = 28;
+  ENTITY_TYPE_KYC_REQUEST = 29;
+  ENTITY_TYPE_DRIVERQUALITY_QUALITY = 30;
+  ENTITY_TYPE_DRIVERQUALITY_VIOLATION = 31;
+  ENTITY_TYPE_DRIVERQUALITY_PENALTY = 32;
+  ENTITY_TYPE_DRIVERCENTER = 33;
+  ENTITY_TYPE_DRIVER_AGENT = 34;
+  ENTITY_TYPE_SPX_DRIVER_SETTLEMENT = 35;
+  ENTITY_TYPE_PARTNER_APP_CONFIGURATION = 36;
+  ENTITY_TYPE_SPX_ORDER = 37;
+  ENTITY_TYPE_DRIVERQUALITY_RULE_GROUP = 40;
+  ENTITY_TYPE_DRIVERQUALITY_RULE = 41;
+  ENTITY_TYPE_FLASH_SALE_CAMPAIGN = 42;
+  ENTITY_TYPE_FLASH_SALE_TIMESLOT = 43;
+  ENTITY_TYPE_FLASH_SALE_STORE = 44;
+  ENTITY_TYPE_FLASH_DISH_DISCOUNT = 45;
+  ENTITY_TYPE_VOUCHER = 46;
+  ENTITY_TYPE_STORE_CHARGEBACK = 47;
+  ENTITY_TYPE_SPX_EXPRESS = 48;
+  ENTITY_TYPE_CASH_CONVERSION_RULE = 49;
+  ENTITY_TYPE_INCENTIVE_TASK = 50;
+  ENTITY_TYPE_QUALITY_RULE = 54;
+  ENTITY_TYPE_QUALITY_RULE_GROUP = 55;
+  ENTITY_TYPE_QUALITY_POINTS = 56;
+  ENTITY_TYPE_ORDER_SERVICE_FEE_CONFIG = 63;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_PRODUCT = 64;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_PACKAGE = 65;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_ATTRIBUTE = 66;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_ORDER = 67;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_FULFILLMENT = 68;
+  ENTITY_TYPE_DRIVER_ATTRIBUTE_INSTALLMENT = 69;
+  ENTITY_TYPE_RECRUITMENT_SESSION = 70;
+  ENTITY_TYPE_RECRUITMENT_SESSION_MATERIAL = 71;
+  ENTITY_TYPE_OCCASION_MODE = 72;
+  ENTITY_TYPE_OCCASION_FEE = 73;
+  ENTITY_TYPE_RECRUITMENT_SESSION_MERCHANT = 74;
+  ENTITY_TYPE_STORE_GROUP = 75;
+  ENTITY_TYPE_ITEM_DISCOUNT_CAMPAIGN = 76;
+  ENTITY_TYPE_OPENAPI_STORE_BIND = 77;
+  ENTITY_TYPE_OPENAPI_Vendor_CONFIG = 78;
+  ENTITY_TYPE_TAGCENTER_TAG_TYPE = 79;
+  ENTITY_TYPE_TAGCENTER_TAG = 80;
+}
+
+enum ChangeType {
+  CHANGE_TYPE_CREATE = 1;
+  CHANGE_TYPE_UPDATE = 2;
+  CHANGE_TYPE_DELETE = 3;
+  CHANGE_TYPE_START = 4;
+}
+//设备操作系统
+enum OS {
+  ANDROID = 1;
+  IOS = 2;
+}
+
+//推送类型
+enum PushType {
+  FCM = 1;
+  APNS = 2;
+}
+
+enum MassType {
+  MASS_TYPE_STORE_BUSINESS_INFO = 1;
+  MASS_TYPE_STORE_MENU = 2;
+  MASS_TYPE_STORE_OPTION = 3;
+  MASS_TYPE_STORE_OPEN_STATUS = 4;
+  MASS_TYPE_STORE_REGULAR_HOURS = 5;
+  MASS_TYPE_STORE_SPECIAL_HOURS = 6;
+  MASS_TYPE_DRIVER_EMPLOYMENT_STATUS = 7;
+  MASS_TYPE_DRIVER_WALLET_ADJUST = 8;
+  MASS_TYPE_DRIVER_WALLET_WITHDRAW = 9;
+  MASS_TYPE_BUYER_REFUND_UPDATE = 10;
+  MASS_TYPE_STORE_CHARGE_BACK = 11;
+  MASS_TYPE_QMS_VIOLATION = 12;
+  MASS_TYPE_DRIVER_WALLET_WITHDRAW_APPROVE = 13;
+  MASS_TYPE_STORE_DISH = 14;
+  MASS_TYPE_STORE_CATALOG = 15;
+  MASS_TYPE_STORE_WHITELIST = 16;
+  MASS_TYPE_DRIVER_SHOPEE_USERNAME = 17;
+  MASS_TYPE_STORE_SCHEDULED_COMMISSIONS = 18;
+  MASS_TYPE_PROMOTION_ITEM_DISCOUNT_CAMPAIGN = 19;
+  MASS_TYPE_MERCHANT_WALLET_ADJUSTMENT = 20;
+  MASS_TYPE_DRIVER_ADDRESS = 21;
+  MASS_TYPE_DRIVER_SERVICE_TYPE = 22;
+  MASS_TYPE_DRIVER_COVID19_VACCINATION_STATUS = 23;
+  MASS_TYPE_DRIVER_BULK_CREATION = 24;
+  MASS_TYPE_STORE_CATEGORY = 25;
+  MASS_TYPE_MERCHANT_QUALITY_PENALTY = 26;
+  MASS_TYPE_DRIVER_BULK_ADD_ORDER_STACK_WHITELIST = 27;
+  MASS_TYPE_DRIVER_BULK_RMV_ORDER_STACK_WHITELIST = 28;
+  MASS_TYPE_MERCHANT_QUALITY_EXCLUDE_VOUCHER = 29;
+  MASS_TYPE_MERCHANT_WALLET_ADJUSTMENT_AUDIT = 30;
+  MASS_TYPE_MERCHANT_WALLET_WITHDRAWAL_MANUAL_NOTI = 31;
+  MASS_TYPE_MERCHANT_QUALITY_BULK_REVOKE_VIOLATION = 32;
+  MASS_TYPE_MERCHANT_QUALITY_EXCLUSION_LIST = 36;
+  MASS_TYPE_STORE_GROUP = 40;
+}
+
+enum MassChangeLogType {
+  MASS_CHANGE_LOG_FILE = 0;
+  MASS_CHANGE_LOG_CONTENT = 1;
+  MASS_CHANGE_LOG_ALL = 2;
+}
+
+enum Enabled {
+  DISABLED = 0;
+  ENABLED = 1;
+}
+
+enum ChargebackStatus{
+  CHARGEBACK_CREATED = 1;
+  CHARGEBACK_COMPLETED = 2;
+  CHARGEBACK_CANCEL = 3;
+  CHARGEBACK_PROCESSING = 4;
+  CHARGEBACK_ON_HOLD = 5;
+}
+
+enum StoreChargebackMethod{
+  CHARGEBACK_METHOD_DEFAULT = 0;
+  CHARGEBACK_METHOD_WALLET_ADJUSTMENT = 1;
+  CHARGEBACK_METHOD_INVOICE = 2;
+  CHARGEBACK_METHOD_WALLET_ADJUSTMENT_AUTO = 3;
+}
+
+enum StoreChargeBackType {
+  CHARGEBACK_TYPE_NONE = 1;//No Charge
+  CHARGEBACK_TYPE_FULL = 2;//Full Charge
+  CHARGEBACK_TYPE_PART = 3;//Partial Charge
+}
+
+// 异步任务
+message AsyncTask {
+  enum Type {
+    STORE_TAG_BINDING_ATTACH = 1;
+    STORE_TAG_BINDING_REMOVE = 2;
+  }
+
+  enum Status {
+    CREATED = 1;
+    PROCESSING = 2;
+    COMPLETED = 3;
+    FAILED = 4;
+  }
+
+  optional uint64 id = 1;
+  optional Type type = 2;
+  optional string file_name = 3;
+  optional string file_link = 4;
+  optional Status status = 5;
+  optional uint32 succeed_cnt = 6;
+  optional uint32 failed_cnt = 7;
+  optional uint64 create_time = 8;
+  optional uint64 update_time = 9;
+  optional string operator = 10;
+  optional uint64 reference_id = 11;
+  optional string failed_link = 12;
+  optional uint64 start_time = 13;
+}
+
+enum QualitySource{
+  QUALITY_SOURCE_UNKNOWN = 0;
+  SYSTEM_FOOD = 1;
+  SYSTEM_FRAUD = 2;
+  SQL = 3;
+  CS = 4;
+}
+
+// Rank 用于 catalog/dish/option 排序
+message Rank {
+  optional uint64 id = 1;
+  optional uint32 rank = 2;
+}
+
+enum DishListingStatus {
+  INACTIVE = 0;
+  ACTIVE = 1;
+}
+
+
+enum DishSaleStatus {
+  NOT_FOR_SALE = 0;
+  FOR_SALE = 1;
+}
+
+enum StoreListingSource {
+  OTHER_SOURCE = 0;
+  HOME_COLLECTION = 1;
+  HOME_CIRCLE = 2;
+  BANNER = 3;
+  POP_UP_BANNER = 4;
+  DL_INDEX = 5;
+  DL_OUTLET = 6;
+  DL_BANNER = 7;
+}
+
+message Dish {
+  message TimeForSales {
+    optional uint64 sale_start_time = 1;
+    optional uint64 sale_end_time = 2;
+  }
+
+  message SalesDay {
+    repeated TimeForSales monday = 1;
+    repeated TimeForSales tuesday = 2;
+    repeated TimeForSales wednesday = 3;
+    repeated TimeForSales thursday = 4;
+    repeated TimeForSales friday = 5;
+    repeated TimeForSales saturday = 6;
+    repeated TimeForSales sunday = 7;
+  }
+  message Flag {
+    optional bool alcoholic = 1;
+    optional bool qc_frozen = 2;
+  }
+  // the flag bit pos in db flag field
+  enum FlagBit {
+    ALCOHOLIC = 0;
+    IS_QC_FROZEN = 1;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 store_id = 2;
+  optional string name = 3;
+  optional string picture = 4;
+  optional string description = 5;
+  optional Available available = 6;
+  optional uint64 price = 7;
+  optional uint64 catalog_id = 8;
+  optional uint32 rank = 9;
+  optional uint32 option_group_count = 10;   // bind&shelve group_count
+  optional uint32 deleted = 11;
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional uint32 sales_volume = 14;
+  optional uint32 rating_total = 15; // 评价总数
+  optional uint32 rating_good = 16;  // 点赞数
+  optional uint32 rating_bad = 17;   // 点踩数
+  optional uint32 bind_group_count = 18;  // bind group_count
+  optional uint64 sale_start_time = 19 [deprecated = true]; // 售卖开始时间
+  optional uint64 sale_end_time = 20 [deprecated = true]; // 售卖结束时间
+  optional uint32 sale_week_bit = 21; // 一周内售卖时间生效天数
+  optional bool in_sale_time = 22;
+  optional DishListingStatus listing_status = 23;
+  optional DishSaleStatus sale_status = 24;
+  repeated TimeForSales time_for_sales = 25; // 售卖时间段
+
+
+  // flag
+  optional uint64 raw_flag = 26; // api层需屏蔽
+  optional Flag flag = 27;
+  optional SalesDay sales_time = 28; // applied day的多售卖时间段
+  optional string crawler_picture = 29; // 爬虫图片
+
+  message SpecialSaleDate {
+    optional uint64 id = 1;
+    optional uint64 start_date = 2;
+    optional uint64 end_date = 3;
+    repeated TimeForSales time_for_sales = 4;
+  }
+  repeated SpecialSaleDate special_sale_dates = 30; //特殊销售时间
+  optional TimeRange out_of_stock_time = 31; //缺货时间
+  optional uint64 sync_item_group_id = 32;
+  optional bool blocked =33;
+  optional TimeRange blocked_time = 34;
+  optional string out_biz_id =35;
+}
+
+message Option {
+  optional uint64 id = 1;
+  optional uint64 store_id = 2;
+  optional string name = 3;
+  optional uint64 price = 4; // 实际货币数值乘以 1e5，保持和其他系统一致
+  optional Available available = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+
+  optional uint64 group_id = 8; // 所属的 Group 的 ID
+  optional uint32 rank = 9; // 在 Group 中的顺序
+  optional TimeRange out_of_stock_time = 10; //缺货时间
+  optional uint64 sync_item_group_id = 11;
+  optional string out_biz_id =12;
+}
+
+message OptionGroup {
+  message Flag {
+    enum Bit {
+      IS_QC_FROZEN = 0;
+    }
+    optional bool qc_frozen = 1;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 store_id = 2;
+  optional string name = 3;
+  optional string remark = 4;
+  optional ShelveState shelve_state = 5;
+
+  optional OptionSelectMode select_mode = 6; // group 下 options 的选择模式
+  optional uint32 select_min = 7; // 最少需要选择的数量
+  optional uint32 select_max = 8; // 最多可以选择的数量
+
+  optional uint64 create_time = 9;
+  optional uint64 update_time = 10;
+
+  optional Flag flag = 11;
+
+  optional uint64 sync_item_group_id = 12;
+  optional string out_biz_id =13;
+}
+
+// DishOptionBinding 表示一个店铺绑定了一个 Option group。
+message DishOptionBinding {
+  optional uint64 store_id = 1;
+  optional uint64 dish_id = 2;
+  optional uint64 group_id = 3;
+  optional uint32 rank = 4;
+  optional ShelveState shelve_state = 5;
+
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+}
+
+message OptionGroupBinding {
+  optional uint64 store_id = 1;
+  optional uint64 group_id = 2;
+  optional uint64 option_id = 3;
+  optional uint32 rank = 4;
+
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+  optional uint64 price = 7;
+}
+
+message Catalog {
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional uint64 store_id = 3;
+  optional uint32 dish_count = 4; // deprecated
+  optional uint32 rank = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+
+  optional uint64 sync_item_group_id = 8;
+  optional string out_biz_id =9;
+}
+
+message Buyer {
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional string phone = 3;
+  optional Location location = 4;
+  optional string avatar = 5;
+}
+
+message DeliveryAddress {
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional string phone = 3;
+  optional Location location = 4;
+}
+
+message Driver {
+  optional uint64 id = 1;
+  optional string full_name = 2;
+  optional string phone = 3;
+  optional Location location = 4;
+  optional string profile_photo = 5;
+  optional string vehicle_plate_no = 6; // 车牌号
+  optional uint32 rating_total = 7; // 评价总数
+  optional float rating_score = 8;  // 评分
+}
+
+message Location {
+  optional string state = 1;
+  optional string city = 2;
+  optional string district = 3;
+  optional string address = 4;
+  optional float latitude = 5;
+  optional float longitude = 6;
+  optional string remark = 7;
+  optional double precise_latitude = 8;
+  optional double precise_longitude = 9;
+}
+
+message CartOption {
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional uint64 price = 3;
+}
+
+message CartOptionGroup {
+  optional uint64 id = 1;
+  optional string name = 2;
+  repeated CartOption options = 3;
+}
+
+message CartDish {
+  optional uint64 id = 1;
+  optional uint64 snapshot_id = 2;
+  optional string name = 3;
+  optional string image = 4;
+  optional uint64 price = 5;
+  optional uint64 catalog_id = 6;
+}
+
+
+message CartItemDetail {
+  optional CartDish dish = 1;
+  repeated CartOptionGroup option_groups = 2;
+  optional ItemDiscount discount = 3;
+  optional FlashSaleDishDiscount flash_sale_discount = 4;
+  optional uint64 flash_sale_limit = 5; // 当前用户剩余可用该flash sale活动次数限制
+  enum DiscountType {
+    NoDiscount = 0;
+    ItemDiscount = 1;
+    FlashSaleDiscount = 2;
+  }
+  optional DiscountType discount_type = 6;  //用于标识前端加购的路径，是否在FlashSale页面进行加购
+}
+
+message CartItem {
+  optional uint64 id = 1;
+  optional CartItemDetail detail = 2;
+  optional uint32 quantity = 3;
+  optional CartItemStatus status = 4;
+  optional string remark = 5;
+  optional uint64 item_id = 6; // 标志唯一的菜品+option组合+discountType
+  optional uint64 dish_id = 7;
+  optional uint64 create_time = 8;
+  optional uint64 buyer_id = 9;
+}
+
+message DeliveryAmount {
+  //配送费
+  //  optional uint64 shipping_fee = 1; //买家应付运费，TODO 废弃
+  optional uint64 driver_shipping_income = 2; //骑手运费收入，包含高峰补贴收入，算法给出DriverEarn
+  //  optional uint64 platform_shipping_income = 3; //平台运费收入
+
+  //骑手收入
+  //  optional uint64 driver_total_income = 4; //骑手配送单总收入
+
+  //COD金额
+  optional uint64 pay_to_merchant = 5; //骑手需付给商家的费用，仅COD有，online pay时为0
+  optional uint64 collect_from_customer = 6; //骑手需像收件人收取的费用，仅COD有，online pay时为0
+
+  optional uint64 shipping_surge_fee = 7; //高峰期补贴运费，由算法给出DriverRisingFee
+  optional uint64 parking_fee = 8;//用户支付的骑手停车费
+
+  optional uint64 bad_weather_fee = 9; // 场景模式坏天气费
+  optional uint64 holiday_fee = 10; // 场景模式节日费
+  optional uint64 late_night_fee = 11; // 场景模式深夜费
+}
+
+enum VoucherPaymentType {
+  CREDIT_CARD_NO_INSTALLMENT = 1; // paid by credit card without installment
+  CREDIT_CARD_INSTALLMENT = 2; // paid by credit card with installment
+  COD = 3; // paid by cash on delivery
+}
+
+message OrderCustomTag {
+  required string key = 1;
+  required string value = 2;
+}
+
+message Order {
+  message Item {
+    optional uint64 id = 1;
+    optional CartItem cart_item = 2;
+    // 商品单价
+    // 没有直减优惠时等于 unit_list_price
+    // 有直减优惠时等于 cart_item.detail.item_discount.discount_price + SUM(option_price)
+    optional uint64 unit_price = 3;
+    // 均摊费用（订单中除商品外的其他所有费用的均摊之后的值，其他费用包括但不限于：merchant_service_fee, platform_service_fee, etc.）
+    // Deprecated: Do not use.
+    optional uint64 flat_fee = 4; // 暂时没有用
+    optional uint64 subtotal = 5; // 当前 Item 的总价，subtotal = unit_price * cart_item.quantity
+    optional string image = 6; // 商品图片
+    optional string remark = 7; //菜品备注
+
+    optional uint64 unit_list_price = 8; // 划线价，cart_item.detail.price + SUM(option_price)
+    optional OrderItemStatus status = 9;
+    optional uint64 create_time = 10;
+    optional ItemDiscountType discount_type = 11;
+  }
+
+  enum OrderItemStatus {
+    ITEM_ORIGIN = 0; // 未修改
+    ITEM_PRICE_MODIFIED = 1; // 价格已修改
+    ITEM_QUANTITY_MODIFIED = 2; // 数量已修改
+    ITEM_DELETED = 4; // 已删除
+  }
+
+  message Amount {
+    optional uint64 subtotal = 1; // 菜品的总价 SUM(items.subtotal)
+    optional uint64 tax_amount = 2; // 菜品税费 SUM(菜品原价/(1+服务费比例)/(1+税率)*税率)
+    optional uint64 merchant_service_fee = 3; // 商家服务费 SUM(菜品原价/(1+服务费比例)*服务费比例)
+    optional uint64 platform_service_fee = 4; // 平台服务费
+    optional uint64 shipping_fee = 5; // 总运费 shipping_fee = shipping_basic_fee + shipping_surge_fee
+    optional uint64 total_amount = 6; // 买家应付 total_amount = subtotal + merchant_surcharge_fee + shipping_fee + platform_service_fee - discount_amount - coins_amount - voucher_amount - shipping_voucher_amount
+
+    optional uint64 shipping_basic_fee = 7; // 基础运费
+    optional uint64 shipping_surge_fee = 8; // 高峰期附加运费
+
+    optional uint64 merchant_surcharge_fee = 9; // 商家附加费(打包盒等)
+    optional Promotion promotion = 10; // 优惠相关金额
+
+    optional uint64 pay_to_merchant = 11;
+    optional uint64 collect_from_customer = 12;
+    optional uint64 small_order_fee = 13; // 小额订单手续费
+
+    optional uint64 shipping_fare_extra_fee = 14; // 用于 shipping_fee 3.0解耦，当buyer pays > driver earns 有值，纯为了前端展示，不参与实际交易金额的计算
+    optional uint64 shipping_fare_discount_amount = 15; // 用于shipping_fee 3.0解耦，当buyer pays < driver earns 有值，纯为了前端展示，不参与实际交易金额的计算
+
+    optional uint64 parking_fee = 16; // 商家配置的骑手停车费
+    optional uint64 non_partner_fee = 17; // 非合作商家的订单，平台额外收取的服务费用
+
+    optional uint64 bad_weather_fee = 18; // 场景模式坏天气费
+    optional uint64 holiday_fee = 19; // 场景模式节日费
+    optional uint64 late_night_fee = 20; // 场景模式深夜费
+  }
+
+  message Promotion {
+    message Flag {
+      enum Bit {
+        ITEM_VOUCHER = 0;
+        SHIPPING_FEE_VOUCHER = 1;
+        COINS_CASHBACK_VOUCHER = 2;
+        COINS = 3;
+      }
+
+      optional bool use_item_voucher = 1;
+      optional bool use_shipping_fee_voucher = 2;
+      optional bool use_coins_cashback_voucher = 3;
+      optional bool use_coins = 4; // 金币抵扣
+    }
+
+    optional uint64 shipping_discount_amount = 1; // 配送费满减优惠金额
+    optional uint64 coins_redeemed_amount = 2; // 金币抵扣金额
+    optional uint64 item_voucher_amount = 3; // food优惠券优惠金额
+    optional uint64 shipping_voucher_amount = 4; // 运费优惠金额
+    optional int64 coins_earning = 5; // 支付返还金币数量，与 CoinsCashback 互斥
+    optional int64 coins_cashback = 6; // 优惠券返还金币数量，与 CoinsEarning 互斥
+    optional uint64 item_discount_amount = 7; // 商品满减优惠总金额
+    optional uint64 voucher_merchant_subsidy_amount = 8;  //co-fund中商家为voucher付出的金额
+  }
+
+  message Flag {// TODO: 为啥不用bool？
+    optional uint32 is_returned = 1;
+    optional uint32 is_refunded = 2;
+    optional uint32 is_manual_confirmed = 3;
+    optional uint32 can_driver_rewrite = 4; // 骑手能否修改本订单
+    optional uint32 is_driver_rewrite_preview = 5 [deprecated = true]; // deprecated
+    optional uint32 has_dropped = 6; // 放弃过配送单
+    optional uint32 is_instant_preparation = 7; // 是否为即时备餐订单
+    optional uint32 can_merchant_rewrite = 8; // 商户能否修改本订单
+    optional uint32 is_dff = 9; // 是否DFF订单
+    optional uint32 is_pao_tang = 10; // 是否PaoTang类型订单。https://confluence.shopee.io/pages/viewpage.action?pageId=945359864
+  }
+
+  // the flag bit pos in db flag field
+  enum FlagBit {
+    IS_RETURNED = 0; // is_returned
+    IS_REFUNDED = 1; // is_refunded
+    IS_MANUAL_CONFIRMED = 2; // is_manual_confirmed
+    CAN_DRIVER_REWRITE = 3;
+    IS_DRIVER_REWRITE_PREVIEW = 4;
+    HAS_DROPPED = 5;
+    IS_INSTANT_PREPARATION = 6;
+    CAN_MERCHANT_REWRITE = 7;
+    IS_DFF = 8;
+    IS_PAO_TANG = 9;
+  }
+
+  enum RewriteType {
+    REWRITE_ORIGIN = 0; // 未修改
+    REWRITE_REFUND = 1; // 退差价
+    REWRITE_MAKE_UP = 2; // 补差价
+    REWRITE_MODIFIED = 3; // 无需退补
+  }
+
+  enum RewriteReason {
+    REWRITE_RESERVED = 0;
+    REWRITE_ITEM_UNAVAILABLE = 201;
+    REWRITE_BUYER_REQUIREMENT = 202;
+    REWRITE_ITEM_PRICE_CHANGED = 203;
+    REWRITE_EXTRA_FEE = 204;
+    REWRITE_OTHERS = 250;
+  }
+
+  message StoreSettlementFactor{
+    optional SettlementMode store_settlement_mode = 1; // 下单时门店的结算模式
+    optional uint64 commission_rate = 2;//佣金比例
+    optional uint64 tax_rate = 3;// 税率
+    optional uint32 service_charge_fee_rate = 4;// 商家附加费率
+
+    // TH/MY 增加
+    optional Vat vat = 5;// 清算金额是否需要扣除VAT
+    optional uint64 vat_rate = 6;// VAT比例
+    optional Wht wht = 7;// 是否计算并展示WHT
+    optional uint64 wht_rate = 8;// WHT比例
+    optional VatCalculate vat_calculate = 9;// 决定在order settlement的佣金计算中，是否要除以税率; Inclusive 佣金计算时，（商品金额+商家surcharge）/ (1+vat)作为基数;Exclusive 佣金计算时，（商品金额+商家surcharge）作为基数
+    optional Store.SettleTo settle_to = 10;// 结算给store 还是 merchant
+  }
+
+  message PaymentInfo{
+    optional VoucherPaymentType voucher_payment_type = 1; // enum VoucherPaymentType
+    optional string credit_card_bin = 2;
+  }
+
+  optional uint64 id = 1; // order_id
+  //  optional string order_no = 2; // 废弃
+  optional OrderSource source = 3;
+  optional uint64 buyer_id = 4;
+  optional Store store = 5;
+  optional DeliveryAddress delivery_address = 6;
+  repeated Item items = 7;
+  //  optional Promotion promotion = 8; // 挪到 Amount 中
+  optional Amount amount = 9;
+  optional PaymentMethod payment_method = 10;
+  optional string remark = 11;
+  optional OrderStatus status = 12;
+  optional CancelReason cancel_reason = 13;
+  optional CancelSource cancel_source = 14;
+  optional Proposer cancel_proposer = 15;
+  //  optional uint64 checkout_id = 15; // 废弃
+  optional uint64 place_time = 16;
+  optional uint64 payment_time = 17;
+  optional uint64 review_time = 18;
+  optional uint64 merchant_confirm_time = 19;
+  optional uint64 complete_time = 20;
+  optional uint64 cancel_time = 21;
+  optional uint64 create_time = 22;
+  optional uint64 update_time = 23;
+  optional uint64 estimate_arrived_time = 24;   //预计到店时间，用于商家端展示
+  optional uint64 estimate_delivered_time = 25; //预计送达时间，用于商家端展示
+  optional uint32 pickup_seq = 26; //取餐码
+  // optional uint64 delivery_order_id = 27; // 废弃
+  optional uint64 delivery_assign_time = 28;
+  optional uint64 delivery_arrive_time = 29;
+  optional uint64 delivery_pickup_time = 30;
+  optional uint64 delivery_complete_time = 31;
+  //编号32曾被使用 SettlementMode store_settlement_mode 防止直接变更已有字段先跳过这个编号,新增在39
+  optional bool is_received = 33;
+  optional bool is_ready = 34;
+  optional uint64 ready_time = 35;
+
+  optional uint64 rating_completed_time = 36;
+  optional uint32 is_rating_completed = 37;
+  optional Flag flag = 38;
+  optional uint64 item_quantity = 39; // 订单中商品的总数 sum(item.cart_item.quantity)
+  optional StoreSettlementFactor store_settlement_factor = 40;//下单时商家结算因子
+
+  optional RewriteType rewrite_type = 41; // 改价类型
+  optional RewriteReason rewrite_reason = 42; // 改价原因
+  optional string rewrite_remark = 43;
+  optional uint64 refund_amount = 44; // 应退金额
+  optional uint64 makeup_amount = 45; // 应补金额
+  optional Promotion.Flag promotion_flag = 46; // 优惠相关标记
+  optional string voucher_reference_id = 47; // 下单/改价预览/取消改价预览等场景传给 promotionsvr
+  optional uint64 delivery_distance = 48; // 配送距离（ store 到 buyer )
+  optional uint64 delivery_reconfirm_time = 49; // 骑手确认下单的时间
+
+  optional uint64 merchant_confirmed_deadline = 50; // 商家接单超时时间点
+  optional Store.Flag.OvertimeOrderMode overtime_mode = 51; //接单超时处理模式
+  optional RewriteSource rewrite_source = 52; // 改单的来源
+
+  repeated LocationGroup store_location_groups = 53; // 下单时店铺所属的LocationGroup
+  repeated LocationGroup buyer_location_groups = 54; // 下单时用户所属的LocationGroup
+
+
+  optional string cancel_remark = 55;     // cancel remark
+  repeated Certificate cancel_certs = 56; // cancel certs
+
+  optional uint64 vendor_id = 57;
+  optional uint64 delay_assign_duration = 58; //延迟指派时间
+  optional bool is_merchant_visible = 59; //商户是否可以看见该订单
+  optional PaymentInfo payment_info = 60;
+
+  optional uint64 min_spend = 61; //小额订单费收取线
+  repeated OrderCustomTag custom_tags = 62; // 拓展字段，用做订单数据总线
+  optional DeliveryMode delivery_mode = 63; //配送方式
+}
+
+// 配送方式
+enum DeliveryMode {
+  UNKNOWN_DELIVERY = 0;
+  PLATFORM_DELIVERY = 1; // ShopeeFood平台配送
+  MERCHANT_DELIVERY = 2; // 商家自配送
+}
+
+message DeliveryOrder {
+  message GeoTracking {
+    optional Geo arrive_geo = 1;
+    optional Geo pickup_geo = 2;
+    optional Geo complete_geo = 3;
+    optional Geo accept_geo = 4;
+  }
+
+  message AdvanceDeposit {
+    enum Status {
+      SUCCESS = 1;
+      FAILED = 2;
+    }
+    optional uint64 id = 1;
+    optional uint64 amount = 2;
+    optional Status status = 3;
+    optional uint64 time = 4;
+  }
+
+  message DepositRefund {
+    enum Status {
+      SUCCESS = 1;
+      FAILED = 2;
+    }
+    optional uint64 id = 1;
+    optional uint64 amount = 2;
+    optional Status status = 3;
+    optional uint64 time = 4;
+  }
+
+  enum AssignType {
+    NONE_TYPE = 0;
+    AUTOMATE = 1;  // 自动派单
+    //    FREE_PICK = 2; //抢单大厅
+    MANUAL = 3;    // 人工指派
+    STACK_ASSIGN = 4;   // 追单
+  }
+
+  enum AdvanceDepositRefundStatus {
+    DEPOSIT_DEFAULT = 0;
+    DEPOSIT_INITED = 1;
+    DEPOSIT_DEPOSITED = 2;
+    DEPOSIT_REFUNDED = 3;
+  }
+
+  message Flag {
+    optional uint32 is_instant_preparation = 1;
+    optional uint32 is_dff = 2;
+    optional uint32 is_group_delivery = 3;       // 组单标记
+    optional uint32 is_group_first_delivery = 4; // 是否首先配送标记
+  }
+
+  enum FlagBit {
+    IS_INSTANT_PREPARATION = 0;
+    IS_DFF = 1;
+    IS_GROUP_DELIVERY = 2;
+    IS_GROUP_FIRST_DELIVERY = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  //  optional uint64 buyer_id = 3; // 废弃
+  optional uint64 driver_id = 4;
+  optional uint64 store_id = 5;
+
+  optional DeliveryAddress delivery_address = 6; //收件信息
+  optional uint64 delivery_distance = 7; //店铺-买家距离
+
+  optional uint64 estimate_arrived_time = 8; //预计到店时间，unix时间戳，精确到毫秒，由派送系统计算好写入
+  optional uint64 estimate_delivered_time = 9; //预计送达时间，unix时间戳，精确到毫秒，由订单copy过来
+
+  optional DeliveryAmount delivery_amount = 10;
+
+  //  repeated Order.Item items = 11; //订单商品快照，TODO 废弃
+
+  optional uint32 pickup_seq = 12; // 取餐码，从订单copy过来
+  optional DeliveryStatus delivery_status = 13;
+
+  optional CancelReason cancel_reason = 14;
+  optional CancelSource cancel_source = 15;
+
+  optional uint64 assign_time = 16;
+  optional uint64 arrive_time = 17;
+  optional uint64 pickup_time = 18;
+  optional uint64 complete_time = 19;
+  optional uint64 create_time = 20;
+  optional uint64 update_time = 21;
+  //  optional uint64 place_time = 22; TODO 废弃
+  //  optional uint64 quantity = 23; TODO 废弃
+  //  optional string remark = 24; TODO 废弃
+  //  optional string order_no = 25; TODO 废弃
+  optional uint64 cancel_time = 26;
+
+  optional GeoTracking geo_tracking = 27;
+  optional string receipt = 28;
+  optional Location store_address = 29;
+
+  optional AssignType assign_type = 30;
+  optional string assign_operator = 31;
+  optional AdvanceDeposit advance_deposit = 32;
+  optional DepositRefund deposit_refund = 33;
+
+  optional string cancel_remark = 34;
+  repeated Certificate cancel_certs = 35; // 证书存放格式
+
+  optional Flag flag = 36;
+  optional AdvanceDepositRefundStatus advance_deposit_refund_status = 37;
+  optional uint64 begin_assign_time = 38;
+  optional string timezone = 39; // 配送单创建时店铺对应位置所在的时区
+
+  // group新增
+  optional uint64 group_id = 50;
+  optional uint64 pickup_rank = 51;
+  optional uint64 delivery_rank = 52;
+
+  optional uint64 driver_delivery_order_id = 53;
+}
+
+message Payment {
+  enum Type {
+    PLACE_ORDER = 1;
+    REWRITE_ORDER = 2;
+  }
+
+  optional uint64 checkout_id = 1;
+  optional uint64 buyer_id = 2;
+  optional uint64 order_id = 3;
+  optional uint64 transaction_ref = 4;
+
+  optional PaymentMethod method = 5;
+  optional uint64 channel_id = 6; // 由 SPM 定义的支付渠道 ID
+  optional string channel_option = 7; // 由 SPM 提供的支付渠道选项信息
+  optional uint64 total_amount = 8;
+  optional string currency = 9;
+  optional string region = 10;
+
+  optional PaymentStatus status = 11;
+  optional uint64 initiation_time = 12;
+  optional uint64 payment_time = 13;
+  optional uint64 create_time = 14;
+  optional uint64 update_time = 15;
+
+  optional Type payment_type = 16;
+  optional string payment_link = 17;
+  optional PaymentPlatform platform = 18; // 支付平台。PaymentMethod是PaymentPlatform下的支付方式
+  optional string third_party_transaction_ref = 19; // 针对第三方支付平台的TransactionRef。为了支持第三方支付平台的TransactionRef是字符串类型而增加，无法复用原有的TransactionRef
+}
+
+//地理位置经纬度坐标
+message Geo {
+  optional float longitude = 1;
+  optional float latitude = 2;
+  optional double precise_longitude = 3;
+  optional double precise_latitude = 4;
+}
+
+//变更日志
+message ChangeLog {
+  optional uint64 id = 1;
+  optional EntityType entity_type = 2; // 实体类型
+  optional uint64 entity_id = 3; // 实体id
+  optional ChangeType change_type = 4; // 变更类型
+
+  optional uint64 driver_id = 5; // 骑手账号id
+  optional uint64 buyer_id = 6; // 买家账号id
+  optional uint64 seller_id = 7; // 卖家账号id
+  optional uint64 store_id = 8; // 店铺id
+  optional string old_value = 9; // 变更前数据，选填，json，示例：{"field1":"value1","field2":"value2",...}
+  optional string new_value = 10; // 变更后数据，json，示例：{"field1":"value1","field2":"value2",...}；增量：{"field1":"+value1","field2":"-value2",...}
+  optional string remark = 11; // 备注，选填，更详细的信息，如整个request json
+
+  optional Source source = 12; // 操作来源
+  optional string operator = 13; // 操作人，邮箱/骑手/商户/买家
+  optional uint64 operate_time = 14; // 操作时间
+  optional uint64 create_time = 15; // 创建时间，业务服务不用填
+}
+
+message Result {
+  optional uint64 id = 1;
+  optional int32  code = 2;
+  optional string msg = 3;
+}
+
+//设备
+message Device {
+  optional string device_id = 1;  //设备id
+  optional string device_model = 2; //设备型号
+  optional OS os = 3;  //1-android, 2-ios
+  optional string os_version = 4; //操作系统型号
+  optional string push_token = 5; //推送token
+  optional PushType push_type = 6; //推送类型
+  optional string app_version = 7; //app版本号
+  optional string channel = 8; //安装渠道
+  optional uint64 ip = 9; //客户端ip
+  optional string imei = 10; //设备imei码
+  optional string idfa = 11; //设备idfa码
+  optional string mac = 12; //设备mac地址
+  optional uint64 driver_id = 13; //设备登录骑手id
+  optional string bundle_id = 14;//安装包bundleID
+}
+
+// ==================店铺相关start=====================
+
+// 店铺基础信息-下单过程中被用到
+message Store{
+  enum WalletStatus {// 钱包状态
+    WALLET_DISABLE = 0;  // 0-未启用
+    WALLET_ENABLE = 1;   // 1-已使用
+  }
+  enum AppStatus {// Merchant APP使用状态
+    APP_DISABLE = 0;
+    APP_ENABLE = 1;
+  }
+  optional uint64 id = 1;//店铺id
+  optional string name = 2;//店铺名
+  optional uint64 merchant_id = 3;//店铺所属商家id
+  optional uint64 tag_id = 4 [deprecated = true];//店铺所属类目id
+  optional uint64 brand_id = 5;//店铺所属品牌id
+
+  optional uint64 tob_user_id = 6 [deprecated = true]; // 店铺可以绑定多个staff, 该字段不会再同步了
+
+  optional WalletStatus is_use_wallet = 7; // 是否使用钱包, 0-不使用, 1-使用
+  optional AppStatus is_use_merchant_app = 8; // 是否使用merchant app, 0-不使用, 1-使用
+
+  optional Location location = 9;
+  optional string postal_code = 10;// 邮编
+  optional string register_phone = 11;//店铺注册电话
+  optional string email = 12;//店铺联系邮箱
+  optional uint32 email_source = 13 [deprecated = true];//店铺联系邮箱 数据来源 1-store 2-merchant
+
+  optional uint64 register_time = 14;//店铺注册日期---以ms为单位存储
+
+  optional string logo = 15;//店铺品牌头像---图片id
+  optional string banner = 16;//店铺banner图---图片id
+
+  optional PartnerType partner_type = 17; // 合作类型
+
+  optional uint64 commission_rate = 18;// 佣金，存实际百分比*100后的结果
+  optional uint64 tax_rate = 19;// 税率，存实际百分比*100后的结果
+  optional uint64 service_fee = 20;// 服务费
+  optional uint64 min_spend = 21;//最小起送价格
+  optional uint64 delivery_distance = 22;//配送距离
+  optional uint64 preparation_time = 23;//备菜时间
+  optional string contact_phone = 24;//联系电话
+
+  optional StoreStatus status = 25; // 店铺状态
+  //  optional uint64 closed_start_time = 26; // pause的开始时间, deprecated, placeholder
+  //  optional uint64 closed_end_time = 27; // pause的结束时间, deprecated, placeholder
+
+  enum AutoConfirmed{
+    Manual = 0;
+    Auto = 1;
+  }
+  enum AutoConfirmedEnabled{
+    Disable = 0;
+    Enable = 1;
+  }
+
+  optional AutoConfirmed auto_confirmed = 28; // 是否自动接单, 0-false(手动接单), 1-true(自动接单)
+  optional AutoConfirmedEnabled auto_confirmed_enabled = 29; // control whether the auto_confirmed function is enabled, 0-false(店铺只能自动接单), 1-true(店铺可以选择自动或手动接单)
+
+  optional uint64 create_time = 30;
+  optional uint64 update_time = 31;
+  optional uint32 rating_total = 32; // 评价总数
+  optional float rating_score = 33;  // 评分
+  optional OpeningStatus.Status opening_status = 34;
+
+  message SurChargeIntervals {
+    repeated SurChargeInterval intervals = 1;
+  }
+
+  message SurChargeInterval {
+    optional uint64 order_price_end = 1; // 该区间最大的订单价格，0代表无穷大
+    optional uint64 fee = 2; // 该区间收取的surcharge fee
+  }
+
+  optional SurChargeIntervals surcharge_intervals = 35;
+  optional uint32 service_charge_fee_rate = 36;
+  optional uint32 driver_modify_order_enabled = 37;
+
+  enum DeliveryDistanceMode {
+    DELIVERY_DISTANCE_MODE_DEFAULT = 1;
+    DELIVERY_DISTANCE_MODE_CUSTOMIZED = 2;
+  }
+  optional DeliveryDistanceMode delivery_distance_mode = 38;
+  optional uint32 business_info_added = 39;
+
+  optional uint32 is_instant_prep = 40;
+
+  message Flag {
+    // the flag bit pos in db flag field
+    enum FlagBit {
+      OVERTIME_ORDER_MODE = 0;
+      IS_SUPER_MENU = 1;
+      REQUIRED_RECEIPT_PHOTO = 2;
+      EDIT_MENU_ENABLED = 3;
+      HIDE_DISH_NOTE = 4;
+      AUTO_PRINT = 5;
+      EDIT_PROMOTION_ENABLED = 6;
+      SHOW_BUYER_HALAL_TYPE = 7;
+      HIDE_PROCESSING_FEE = 8;
+      SPECIAL_MODE_STORE_CLOSE = 9;
+      SPECIAL_MODE_DELIVERY_DISTANCE = 10;
+      SPECIAL_MODE_STORE_DFF = 11;
+    }
+
+    enum OvertimeOrderMode {
+      OVERTIME_ORDER_MODE_CONFIRM = 0;
+      OVERTIME_ORDER_MODE_DECLINE = 1;
+    }
+    optional OvertimeOrderMode overtime_order_mode = 1;
+    optional uint32 is_super_menu = 2;
+    optional uint32 required_receipt_photo = 3;
+    optional uint32 edit_menu_enabled = 4;
+    optional uint32 hide_dish_note_enabled = 5;
+    optional uint32 auto_print_disabled = 6; // 0-自动打印, 1-非自动打印
+    optional uint32 edit_promotion_enabled = 7;
+    optional uint32 show_buyer_halal_type = 8; //0-不展示 1-展示
+    optional uint32 hide_processing_fee = 9; //0-不隐藏 1-隐藏
+    optional uint32 special_mode_store_close = 10; // 0-否 1-是
+    optional uint32 special_mode_delivery_distance = 11; // 0-否 1-是
+    optional uint32 special_mode_store_dff = 12; // 0-否 1-是
+  }
+
+  optional Flag flag = 41;
+  enum ModifyOrderMode {
+    MODIFY_ORDER_MODE_NO_EDITING = 1;
+    MODIFY_ORDER_MODE_DRIVER_ONLY = 2;
+    MODIFY_ORDER_MODE_MERCHANT_ONLY = 3;
+  }
+  optional ModifyOrderMode modify_order_mode = 42;
+
+  enum StatusReason {
+    ON_BOARDING = 1;
+    PERMANENT_ClOSE = 2;
+    TEMPORARY_ClOSE = 3;
+    FRAUD = 4;
+    QMS_Suspended = 5;
+    QMS_Temporarily_Deactivated = 6;
+    INACTIVE_IN_MIS = 7;
+    OTHERS = 100;
+  }
+  optional StatusReason status_reason = 43;
+  optional string status_reason_remark = 44;
+  message Overlay {
+    optional string logo_image = 1; // overlay logo图片key
+    optional string banner_image = 2; // overlay banner图片key
+  }
+  optional Overlay overlay = 45; // 店铺图片叠加展示营销活动的 Overlay, 这个属于店铺动态属性，店铺接口不会返回这个字段，需要动态从cms系统获取
+
+  message ScheduledCommission {
+    optional uint32 commission_rate = 1;
+    optional uint32 priority = 2;
+    optional uint64 effective_time = 3;
+    optional uint64 expire_time = 4;
+  }
+  message ScheduledCommissions {
+    repeated ScheduledCommission scheduled_commissions = 1;
+  }
+  optional ScheduledCommissions scheduled_commissions = 46;
+  optional uint32 effective_commission_rate = 47;
+  optional uint64 vendor_id = 48;
+
+  optional string tob_user_ids = 60;
+  optional string bank_name = 61;
+  optional string bank_account_no = 62;
+  optional string bank_branch = 63;
+  optional string bank_account_name = 64;
+  optional uint64 wallet_id = 65;
+  optional string tax_id = 66 [deprecated = true]; // store维度没有tax_id, 之前th地区是将merchant的tax_id同步到store, 现在开始废弃该字段, 都从merchant那取
+  optional SettlementMethod settlement_method = 67;
+  optional PaymentWay payment_way = 68;
+  optional Vat vat = 69;
+  optional uint64 vat_rate = 70;
+  optional Wht wht = 71;
+  optional uint64 wht_rate = 72;
+  enum SettleTo {
+    SETTLE_TO_UNKNOWN = 0;
+    SETTLE_TO_MERCHANT = 1;
+    SETTLE_TO_STORE = 2;
+    SETTLE_TO_MERCHANT_HOST = 3;
+  }
+  optional SettleTo settle_to = 73;
+  optional uint64 source_update_time = 74;
+  optional uint64 bank_channel_id = 75;
+  optional VatCalculate vat_calculate = 76;
+  optional PayoutMethod payout_method = 77;
+  optional CrossMonthSettlement cross_month_settlement = 78;
+  enum HalalType {
+    NON_HALAL = 1;
+    HALAL_FRIENDLY = 2;
+    CERTIFIED_HALAL = 3;
+  }
+  optional HalalType halal_type = 79;
+  optional uint64 small_order_fee = 80;
+  enum ServiceFeeMode {
+    Default = 1;
+    Customize = 2;
+  }
+  optional ServiceFeeMode service_fee_mode = 81;
+
+  enum DFFMode {
+    DFF_MODE_DEFAULT = 1;
+    DFF_MODE_CUSTOMIZED_MUST_DFF = 2;
+    DFF_MODE_CUSTOMIZED_MUST_MFF = 3;
+  }
+  optional DFFMode dff_mode = 82;
+  enum DFFSetting {
+    DFF_SETTING_UNKNOWN = 0;
+    DFF_SETTING_MUST_DFF = 1;
+    DFF_SETTING_APPLY_BY_ALGO = 2;
+    DFF_SETTING_MUST_MFF = 3;
+  }
+  optional DFFSetting dff_setting = 83;
+  optional string timezone = 84;
+  optional uint64 district_id = 85;
+
+  optional StoreCategory main_category = 86;
+  message SubCategory {
+    repeated StoreCategory sub_category = 1;
+  }
+  optional SubCategory sub_category = 87;
+
+  enum MaxDelayTimeMode {
+    MaxDelayTimeDefault = 1;
+    MaxDelayTimeCustomize = 2;
+  }
+  optional MaxDelayTimeMode max_delay_time_mode = 88;
+  optional uint64 max_delay_time = 89;
+
+  enum StatusInAdmin {
+    NOT_INACTIVE = 1;
+    INACTIVE = 2;
+  }
+  optional StatusInAdmin status_in_admin = 90;
+
+  enum DeliveryMethod {
+    PLATFORM = 0;
+    SELF = 1;
+  }
+
+
+  optional uint64 payout_account_id = 91;
+  enum ConfigStatus {
+    ConfigStatus_Unknown = 0;
+    ConfigStatus_Active = 1;
+    ConfigStatus_Inactive = 2;
+  }
+  optional ConfigStatus wallet_relation_status = 92;
+  optional ConfigStatus settlement_config_status = 93;
+  optional ConfigStatus product_config_status = 94;
+  optional BankAccountStatus bank_account_status = 95;
+  optional string auto_payout_remark = 96;
+  optional uint64 parking_fee = 97;
+
+  enum SmallOrderFeeMode {
+    SMALL_ORDER_FEE_MODE_DEFAULT = 1;
+    SMALL_ORDER_FEE_MODE_CUSTOMIZED = 2;
+  }
+  optional SmallOrderFeeMode small_order_fee_mode = 98;
+
+  optional string extra_contact_phones = 99;
+  optional uint32 category_type = 100;
+  optional uint64 maximum_subtotal_price = 102;
+  optional DeliveryMethod delivery_method = 103;
+  optional uint64 min_fee = 104;
+  message ShippingFee {
+    optional uint32 from = 1;
+    optional uint32 to = 2;
+    optional uint64 fee = 3;
+  }
+  message ShippingFees {
+    repeated ShippingFee shipping_fees = 1;
+  }
+  optional ShippingFees shipping_fees = 105;
+  optional uint64 bank_branch_id = 106;
+}
+
+// 店铺基础信息-下单过程中被用到
+message StoreMin{
+  enum WalletStatus {// 钱包状态
+    WALLET_DISABLE = 0;  // 0-未启用
+    WALLET_ENABLE = 1;   // 1-已使用
+  }
+  enum AppStatus {// Merchant APP使用状态
+    APP_DISABLE = 0;
+    APP_ENABLE = 1;
+  }
+  optional uint64 id = 1;//店铺id
+  optional string name = 2;//店铺名
+  optional uint64 merchant_id = 3;//店铺所属商家id
+  optional uint64 tag_id = 4 [deprecated = true];//店铺所属类目id
+  optional uint64 brand_id = 5;//店铺所属品牌id
+
+  optional uint64 tob_user_id = 6 [deprecated = true]; // 店铺可以绑定多个staff, 该字段不会再同步了
+
+  optional WalletStatus is_use_wallet = 7; // 是否使用钱包, 0-不使用, 1-使用
+  optional AppStatus is_use_merchant_app = 8; // 是否使用merchant app, 0-不使用, 1-使用
+
+  optional Location location = 9;
+  optional string postal_code = 10;// 邮编
+  optional string register_phone = 11;//店铺注册电话
+  optional string email = 12;//店铺联系邮箱
+  optional uint32 email_source = 13 [deprecated = true];//店铺联系邮箱 数据来源 1-store 2-merchant
+
+  optional uint64 register_time = 14;//店铺注册日期---以ms为单位存储
+
+  optional string logo = 15;//店铺品牌头像---图片id
+  optional string banner = 16;//店铺banner图---图片id
+
+  optional PartnerType partner_type = 17; // 合作类型
+
+  optional uint64 commission_rate = 18;// 佣金，存实际百分比*100后的结果
+  optional uint64 tax_rate = 19;// 税率，存实际百分比*100后的结果
+  optional uint64 service_fee = 20;// 服务费
+  optional uint64 min_spend = 21;//最小起送价格
+  optional uint64 delivery_distance = 22;//配送距离
+  optional uint64 preparation_time = 23;//备菜时间
+  optional string contact_phone = 24;//联系电话
+
+  optional StoreStatus status = 25; // 店铺状态
+  //  optional uint64 closed_start_time = 26; // pause的开始时间, deprecated, placeholder
+  //  optional uint64 closed_end_time = 27; // pause的结束时间, deprecated, placeholder
+
+  enum AutoConfirmed{
+    Manual = 0;
+    Auto = 1;
+  }
+  enum AutoConfirmedEnabled{
+    Disable = 0;
+    Enable = 1;
+  }
+}
+
+enum CategoryType {
+  CategoryType_ShopeeFood = 1001;
+  CategoryType_ShopeeMart = 1002;
+}
+
+enum StoreCategoryFirstLevel {
+  FIRST_LEVEL_UNKNOWN = 0;
+}
+
+enum StoreCategorySecondLevel {
+  SECOND_LEVEL_UNKNOWN = 0;
+}
+
+message StoreCategory {
+  optional StoreCategoryFirstLevel level_1 = 1;
+  optional StoreCategorySecondLevel level_2 = 2;
+}
+
+enum BankAccountStatus {
+  BANK_STATUS_NONE = 0;
+  BANK_STATUS_CHECKED = 1;
+  BANK_STATUS_PENDING = 2;
+  BANK_STATUS_REJECTED = 3;
+  BANK_STATUS_VERIFIED = 4;
+  BANK_STATUS_BANNED = 5;
+  BANK_STATUS_DELETED = 6;
+}
+
+enum SettlementMethod {
+  SETTLEMENT_METHOD_NONE = 0;
+  SETTLEMENT_METHOD_T0 = 1;
+  SETTLEMENT_METHOD_T1 = 2;
+  SETTLEMENT_METHOD_WEEKLY = 3;
+  SETTLEMENT_METHOD_MONTHLY = 4;
+  SETTLEMENT_METHOD_BIWEEKLY = 5;
+}
+
+enum PaymentWay {
+  PAYMENT_UNKNOWN = 0;
+  PAYMENT_MANUAL = 1;
+  PAYMENT_AUTO = 2;
+}
+
+enum Vat {
+  VAT_UNKNOWN = 0;
+  VAT_YES = 1;
+  VAT_NO = 2;
+}
+
+enum Wht {
+  WHT_UNKNOWN = 0;
+  WHT_YES = 1;
+  WHT_NO = 2;
+  WHT_BEHALF = 3;
+  WHT_MANUAL = 4;
+}
+
+enum VatCalculate {
+  VAT_CALCULATE_UNKNOWN = 0;
+  VAT_CALCULATE_EXCLUSIVE = 1;
+  VAT_CALCULATE_INCLUSIVE = 2;
+}
+
+enum PayoutMethod {
+  PAYOUT_METHOD_NONE = 0;
+  PAYOUT_METHOD_AIRPAY_WALLET = 1;
+  PAYOUT_METHOD_BANK_ACCOUNT = 2;
+  PAYOUT_METHOD_CC = 3;
+  PAYOUT_METHOD_NO_PAYOUT = 4;
+  PAYOUT_METHOD_SHOPEEPAY_WALLET = 5;
+}
+
+enum CrossMonthSettlement {
+  CROSS_MONTH_NONE = 0;
+  CROSS_MONTH_NO_SPLIT = 1;
+  CROSS_MONTH_SPLIT_TWO_SETTLEMENT = 2;
+}
+
+enum StoreWhitelistType {
+  DECLINE_OVERTIME_ORDER = 0;
+  SUPER_MENU = 1;
+  HIDE_NOTE = 4;
+  CONFIRM_OVERTIME_ORDER = 5;
+  HIDE_PROCESSING_FEE = 6;
+  SPECIAL_MODE_STORE_CLOSE = 7;
+  SPECIAL_MODE_DELIVERY_DISTANCE = 8;
+  SPECIAL_MODE_DFF = 9;
+}
+
+message OpeningStatus {
+  message Interval {
+    optional uint32 start_relative_sec = 1; // 相对0点0分0秒的秒数
+    optional uint32 end_relative_sec = 2; // 相对0点0分0秒的秒数
+  }
+  message SpecialMode {
+    optional uint64 mode_type_id = 1;
+    optional string mode_type_name = 2;
+  }
+  enum PauseType { // 暂停原因
+    None = 1;
+    SpecialOccasionMode = 2;
+  }
+  message PauseTime {
+    optional uint64 pause_start_time = 1; // 门店暂停开始时间
+    optional uint64 pause_end_time = 2; // 门店暂停结束时间
+    optional PauseType pause_type = 3; // 1:无，2:special_mode
+    optional SpecialMode special_mode = 4;
+
+  }
+  enum Status {
+    Status_OPEN = 2;
+    Status_PAUSE = 3;
+  }
+  enum CloseType {
+    CloseTypeRegularHour = 1;
+    CloseTypeSpecialHour = 2;
+    CloseTypePlatformHour = 3;
+  }
+  message CloseStatus {
+    optional CloseType close_type = 1;
+  }
+  optional foody_base.DisplayOpeningStatus display_opening_status = 1;
+  optional uint32 order_enabled = 2; // 是否可下单, 0-不可以, 1-可以
+  //  optional uint64 effective_closed_end_time = 3; // 实际生效的closed结束时间, deprecated, placeholder
+  optional Interval current_opening_time = 4;
+  optional Interval next_opening_time = 5;
+  //  optional uint64 closed_start_time = 6; // deprecated, placeholder
+  //  optional uint64 closed_end_time = 7; // deprecated, placeholder
+  optional Status opening_status = 8;
+  optional PauseTime pause_time = 9;
+  optional CloseStatus close_status = 10;
+}
+
+message StoreExt {
+  optional foody_base.Store store = 1;
+  optional foody_base.OpeningStatus opening_status = 2;
+}
+
+message Merchant {
+  enum WalletStatus {// 钱包状态
+    WALLET_DISABLE = 0;  // 0-未启用
+    WALLET_ENABLE = 1;   // 1-已使用
+  }
+  optional uint64 id = 1;
+  optional string merchant_name = 2;
+  optional string email = 3;
+  optional string logo = 4;
+  optional string banner = 5;
+  optional uint64 register_time = 6;// 商户注册日期---以ms为单位存储
+
+  optional uint64 create_time = 7;
+  optional uint64 update_time = 8;
+  optional uint64 tob_user_id = 9 [deprecated = true]; // merchant会绑定多个staff, 这个字段不会再同步了
+
+  optional string tob_user_ids = 20;
+  optional string bank_name = 21;
+  optional string bank_account_no = 22;
+  optional string bank_branch = 23;
+  optional string bank_account_name = 24;
+  optional uint64 wallet_id = 25;
+  optional string tax_id = 26;
+  optional SettlementMethod settlement_method = 27;
+  optional PaymentWay payment_way = 28;
+  optional Vat vat = 29;
+  optional uint64 vat_rate = 30;
+  optional Wht wht = 31;
+  optional uint64 wht_rate = 32;
+  optional WalletStatus is_use_wallet = 33;
+  optional uint64 source_update_time = 34;
+  optional uint64 bank_channel_id = 35;
+  optional VatCalculate vat_calculate = 36;
+  optional PayoutMethod payout_method = 37;
+  optional CrossMonthSettlement cross_month_settlement = 38;
+  optional uint64 payout_account_id = 39;
+  enum ConfigStatus {
+    ConfigStatus_Unknown = 0;
+    ConfigStatus_Active = 1;
+    ConfigStatus_Inactive = 2;
+  }
+  optional ConfigStatus wallet_relation_status = 40;
+  optional ConfigStatus settlement_config_status = 41;
+  optional ConfigStatus product_config_status = 42;
+  optional BankAccountStatus bank_account_status = 43;
+  optional string auto_payout_remark = 44;
+  enum MerchantStatus {
+    MerchantStatus_Active = 1;
+    MerchantStatus_Inactive = 2;
+  }
+  optional MerchantStatus merchant_status = 45;
+  optional uint64 bank_branch_id = 46;
+}
+
+message Brand {
+  optional uint64 id = 1;
+  optional string brand_name = 2;
+  optional uint32 deleted = 3;
+  optional uint32 store_count = 4;
+
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+}
+
+message Tag {
+  optional uint64 id = 1;
+  optional string tag_name = 2;
+  optional uint64 deleted = 3;
+
+  optional uint64 create_time = 4;
+  optional uint64 update_time = 5;
+
+  optional uint64 tag_type_id = 6;
+  optional string description = 7;
+  optional string creator = 8;
+  optional uint64 delete_time = 9;
+  optional bool editable = 10;
+}
+
+message TagType {
+  optional uint64 id = 1;
+  optional string type_name = 2;
+  optional string creator = 3;
+
+  enum Status {// deprecated
+    INACTIVE = 1;  // deprecated
+    ACTIVE = 2;    // deprecated
+  }
+
+  optional Status status = 4; // deprecated
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+  optional uint64 tag_count = 7;
+  optional uint64 deleted = 8;
+  optional uint64 delete_time = 9;
+  optional bool editable = 10;
+}
+
+message PredefinedKeyword {
+  optional uint64 id = 1;
+  optional string actual_search_keyword = 2;
+  repeated string user_search_keywords = 3;
+  optional string creator = 4;
+  optional uint64 deleted = 5;
+  optional uint64 update_time = 6;
+  optional uint64 create_time = 7;
+  optional uint64 delete_time = 8;
+}
+
+// ==================店铺相关end=====================
+
+// ==================骑手相关start=====================
+enum WithdrawalChannelType {
+  BANK_CHANNEL = 0;
+  SHOPEE_PAY_CHANNEL = 1;
+}
+
+message WithdrawalChannel {
+  optional Enabled bank = 1;
+  optional Enabled shopee_pay = 2;
+}
+
+message DriverWallet {
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional int64  balance = 3;
+  optional WalletStatus wallet_status = 4;
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+  optional WalletType wallet_type = 7;
+  optional PayoutMode payout_mode = 8;
+  optional string mode_operator = 9;
+  optional uint64 mode_update_time = 10;
+  optional uint64 balance_version = 11;
+  optional WithdrawalChannel withdrawal_channel = 12;
+}
+
+
+message DriverWalletTransaction {
+  optional uint64 id = 1;
+  optional uint64 wallet_id = 2;
+  optional uint64 driver_id = 3;
+
+  optional TransactionType transaction_type = 4;
+
+  optional uint64 amount = 5;
+  optional int64 balance = 6;
+  optional string currency = 7;
+
+  optional uint64 reference_id = 8;
+  optional string remark = 9;
+
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+
+  optional string extend = 12;
+  optional uint64 balance_version = 13;
+  optional uint64 related_order = 14;
+}
+
+//骑手申请单(充值/提现/手动调整)
+message DriverWalletOrder
+{
+  //骑手订单类型：
+  enum Type
+  {
+    TYPE_NONE = 0;
+    TOP_UP = 1;//充值
+    WITHDRAW = 2;//提现
+    ADJUSTMENT_CREDIT = 3;//手动调整打款
+    ADJUSTMENT_DEBIT = 4; // 手动调整扣款
+  }
+  //申请单状态
+  enum Status
+  {
+    CREATED = 0;
+    PAID = 1; //充值流程
+    DEDUCTED = 2; //提现流程,已扣款
+    REJECTED = 3; //提现流程，已拒绝
+    COMPLETED = 4;
+    CANCELED = 5;
+    APPROVED = 21; //提现流程，已审核
+    EXCEPTION = 31; // 异常
+  }
+  //理由类型：
+  enum AdjustReason
+  {
+    REASON_OTHERS = 0;
+    REASON_TOP_UP = 1;//充值
+    REASON_WITHDRAW = 2;//提现
+    REASON_DELIVERY_TO_DOOR_FEE = 3; // 送货上门费
+    REASON_COMPENSATION_FOR_DRIVER = 4; // 赔偿给骑手
+    REASON_REMEASURE_DISTANCE = 5;  // 距离调整费用
+    REASON_PARKING_FEE = 6; // 停车费
+    REASON_BONUS_SHIPPING_FEE = 7;  // 骑手奖励费用,例如骑手发现地址、距离有误，需要加钱才给送
+    REASON_BIG_ORDER_FEE = 8; // 大货品配送费用
+    REASON_DEDUCT_ORDER_VALUE = 9; // 物品损坏费
+    REASON_DEDUCT_SHIPPING_FEE = 10; // shipping_fee等费用或奖励回调，回扣之前给多部分或者追回整个费用或奖励
+    REASON_OTHER_BONUS = 11; // 其他奖励
+
+    REASON_SPX_LOST = 20;
+    REASON_SPX_DAMAGE = 21;
+  }
+
+  enum CancelReason
+  {
+    OTHERS = 0;
+    DRIVER_REQUEST_ADMIN_CANCEL = 1;
+    ANTI_FRAUD = 2;
+    DRIVER_CANCEL = 3;
+    PAYOUT_CHANNEL_FEEDBACK_FAILURE = 4;
+    DRIVER_STATUS_ABNORMAL = 5;
+    MANUAL_AUDIT_DISAPPROVE = 6;
+  }
+
+  enum CancelSource {
+    CANCEL_OTHERS = 0;
+    CANCEL_DRIVER = 1;
+    CANCEL_ADMIN = 2;
+    CANCEL_SYSTEM = 3;
+    CANCEL_SPM = 4;
+  }
+
+  enum AuditResult
+  {
+    AUDIT_RESULT_NONE = 0;
+    APPROVE = 1; // 同意
+    DISAPPROVE = 2; // 不同意
+  }
+
+  //基础信息
+  optional uint64 id = 1;//id
+  //relation
+  optional uint64 driver_id = 2;
+  optional uint64 wallet_id = 3;
+  optional string driver_name = 4;
+  optional string driver_phone = 5;
+
+  optional Type type = 6;//申请单类型 提现/充值/手动调整
+  optional Status status = 7;//申请单状态
+
+  //业务信息
+  optional uint64 amount = 8;//变动金额
+  optional string operator = 9;//确认的运营账号邮箱
+  optional AdjustReason adjust_reason = 10;
+  optional CancelReason cancel_reason = 11;
+  optional string remark = 12;//备注
+  repeated Certificate escrow_certs = 13;//证明资料
+  optional string escrow_no = 14; //第三方交易号，如银行流水、SPM，ops填写
+  optional string bank_account_no = 15; //骑手银行账号
+  optional string bank_name = 16; //银行名称
+
+
+  //支付信息
+  optional uint64 transaction_ref = 17;
+  optional PaymentMethod payment_method = 18;
+  optional uint64 payment_channel_id = 19; // 由 SPM 定义的支付渠道 ID
+  optional string payment_channel_option = 20; // 由 SPM 提供的支付渠道选项信息
+  optional string payment_link = 21; // 由 SPM 返回的支付链接
+  optional string currency = 22;
+  optional string region = 23;
+
+  //time
+  optional uint64 initial_time = 24;
+  optional uint64 payment_time = 25;
+  optional uint64 adjust_time = 26; // 对应提现状态机-已扣款 https://confluence.shopee.io/pages/viewpage.action?pageId=241664504
+  optional uint64 reject_time = 27;
+  optional uint64 complete_time = 28;
+  optional uint64 cancel_time = 29;
+  optional uint64 create_time = 30;
+  optional uint64 update_time = 31;
+
+  optional PayoutMode payout_mode = 32;
+  optional string payment_error_code = 33;
+
+  // 审核信息
+  optional AuditResult audit_result = 34;
+  optional string audit_remark = 35;
+  optional string audit_operator = 36;
+  optional uint64 audit_time = 37;
+
+  optional CancelSource cancel_source = 38;
+  optional uint64 estimate_approve_time = 39;
+  optional uint64 payout_notify_time = 40;  // auto_payout spm回调不同错误码的时间
+
+  optional string bank_account_holder = 41; // 提现银行卡持有人姓名
+  optional uint64 shopee_user_id = 42;
+  optional WithdrawalChannelType withdrawal_channel = 43;
+  optional string shopee_user_name = 44;
+
+  optional ServiceType service_type = 45;
+}
+
+// ==================骑手相关end=====================
+
+// ==================结算相关start=====================
+
+
+message StoreSettlement {
+  message Amount {
+    optional uint64 item_subtotal = 1;//订单菜品金额
+    optional int64  amount = 2; // 结算后要调整的钱（可正，可负）
+    optional uint64 commission = 3;//佣金金额
+    optional uint64 commission_rate = 4;//佣金比例
+    optional uint64 store_subsidy = 5;//商家补贴
+    optional uint64 tax_rate = 6;//税率
+    // TH/MY 增加
+    optional Vat vat = 7;// 清算金额是否需要扣除VAT
+    optional uint64 vat_rate = 8;// VAT比例
+    optional uint64 vat_amount = 9;// VAT金额
+    optional Wht wht = 10;// 是否计算并展示WHT
+    optional uint64 wht_rate = 11;// WHT比例
+    optional uint64 wht_amount = 12;// VAT金额
+    optional VatCalculate vat_calculate = 13;// 决定在order settlement的佣金计算中，是否要除以税率; Inclusive 佣金计算时，（商品金额+商家surcharge）作为基数;Exclusive 佣金计算时，（商品金额+商家surcharge）/ (1+vat)作为基数
+    optional uint64 item_voucher_subsidy = 14;
+    optional uint64 shipping_fee_voucher_subsidy = 15;
+    // MY 增加
+    optional uint64 delivery_cost = 16; // 配送费。记录商家配送单的运费，平台配送单默认为 0
+
+    optional uint64 item_discounts_subsidy = 17;
+    optional uint64 flashsale_discounts_subsidy = 18;
+    optional uint64 surcharge_fee = 19;
+    optional uint64 surcharge_rate = 20;
+  }
+
+  message ClearingFlag {
+    optional bool is_use_merchant_wallet_original = 1;
+    optional bool is_use_merchant_wallet = 2;
+    optional bool is_merchant_delivery = 3;
+  }
+
+  enum FlagBit {
+    IS_USE_MERCHANT_WALLET_ORIGINAL = 0;
+    IS_USE_MERCHANT_WALLET = 1;
+    IS_MERCHANT_DELIVERY = 2;
+  }
+
+  optional uint64 id = 1;
+  optional SettlementSource settlement_source = 2;//结算来源 订单、配送单等
+  optional SettlementMode settlement_mode = 3; // 实际的结算方式
+  optional SettlementStatus settlement_status = 4;
+
+  //费用相关
+  optional Amount amount = 5;
+  optional bool is_from_compensation = 6;
+  optional SettlementErrorCode settlement_error_code = 7;
+
+  optional ClearingFlag clearing_flag = 8;
+
+  //关联id
+  optional string transaction_ref = 10; // ShopeePay 的 ID，暂定
+  optional ReferenceType reference_type = 11; // 关联的单的类型
+  optional uint64 reference_id = 12;             // 关联单据号码
+
+  //TH字段
+  optional uint64 wallet_settlement_id = 13;  // 商家钱包结算单ID
+  optional uint64 settlement_detail_id = 14;  // 商家钱包结算明细ID
+  optional uint64 wallet_id = 15;             // 结算钱包ID
+  optional MerchantWalletType wallet_type = 16;       // 钱包类型
+
+  //门店相关
+  optional uint64 store_id = 20;
+  optional uint64 merchant_id = 21;
+  optional string store_name = 22;
+  optional SettlementMode store_settlement_mode = 23; // 下单时门店的结算方式
+
+  //运营操作
+  repeated Certificate certificates = 30;//证明资料
+  optional string remark = 31;//备注
+  optional CancelReason cancel_reason = 32;//产品要求预留字段，v0.2暂无prd对应
+
+  //时间戳
+  optional uint64 cancel_time = 40;
+  optional uint64 complete_time = 41;
+  optional uint64 create_time = 42;
+  optional uint64 update_time = 43;
+  optional uint64 processing_time = 44;
+}
+
+
+
+message DriverSettlement {
+  optional uint64 id = 1;
+  optional SettlementMode settlement_mode = 2;
+  optional SettlementSource settlement_source = 3;//结算来源 订单、配送单等
+  optional SettlementStatus settlement_status = 4;
+  optional int64 amount = 5;
+
+  optional uint64 driver_id = 6;
+  optional uint64 wallet_id = 7;
+  optional uint64 reference_id = 8;
+  optional ReferenceType reference_type = 9;
+
+  optional Order.Amount   order_amount = 10; // 订单相关金额
+  optional DeliveryAmount delivery_amount = 11; // 配送相关金额,
+
+  optional string remark = 12;
+  repeated Certificate certificates = 13; // 证书存放格式
+  optional CancelReason cancel_reason = 14; //取消原因
+  optional uint64 payment_id = 15;
+
+  optional uint64 create_time = 16;
+  optional uint64 update_time = 17;
+  optional uint64 complete_time = 18;
+  optional uint64 cancel_time = 19;
+
+  optional bool is_from_compensation = 20;
+}
+
+
+message SPXDriverSettlement {
+  message Amount {
+    optional int64  amount = 1;
+    optional uint64 collection_amount = 2;//代收的钱
+  }
+  optional uint64 id = 1;
+  optional ServiceType service_type = 2;
+  optional SettlementType settlement_type = 3;//结算单类型 代收代付、配送费等
+  optional SettlementStatus settlement_status = 4;
+
+  optional uint64 driver_id = 5;
+  optional uint64 wallet_id = 6;
+  optional uint64 reference_id = 7;
+  optional ReferenceType reference_type = 8;
+  optional uint64 payment_id = 9;
+
+  optional Amount  amount = 10;
+
+  optional string remark = 11;
+  repeated Certificate certificates = 12; // 证书存放格式
+  optional CancelReason cancel_reason = 13; //取消原因
+
+  optional uint64 create_time = 14;
+  optional uint64 update_time = 15;
+  optional uint64 complete_time = 16;
+  optional uint64 cancel_time = 17;
+
+  optional bool is_from_compensation = 18;
+  optional string extend = 19;
+}
+
+// ==================结算相关end=====================
+
+message ReturnOrder {
+  enum RefundType {
+    REFUND_NONE = 1;
+    REFUND_FULL = 2;
+    REFUND_PART = 3; //Partial refund
+  }
+
+  enum ReturnStatus {
+    RETURN_CREATED = 1;
+    RETURN_APPROVED = 2;
+    RETURN_COMPLETED = 3;
+    RETURN_CANCELED = 4;
+  }
+
+  enum ReturnType {
+    RETURN_TYPE_ORDER_CANCELLED = 1;  // 取消订单
+    RETURN_TYPE_AFTER_SALES = 2;  // 运营直接发起售后
+    RETURN_TYPE_REWRITE = 3;  // 骑手改价
+  }
+
+  // 5.2.2 售后单发起途径：1.取消订单 2. admin发起
+  // https://confluence.shopee.io/display/SPFOODY/5.3.2.7+Order+System
+  // https://confluence.shopee.io/pages/viewpage.action?pageId=284758345
+  enum ReturnReason {
+    RESERVED = 0;
+    //1~50 buyer
+    BUYER_NOT_RECEIVE = 1;
+    BUYER_PLACED_WRONG_ORDER = 2; // 超时取消
+    BUYER_CHANGE_PAYMENT_METHOD = 3;
+    BUYER_HAS_CHANGED_PLAN = 4;
+    BUYER_WANT_CANCEL = 5;
+    BUYER_WANT_CANCEL_DRIVER_SAID = 6;
+    BUYER_INPUT_WRONG_ADDRESS = 7;
+    BUYER_FORGET_USE_VOUCHER = 8;
+    BUYER_CHANGE_ORDER_PRICE = 9;
+    BUYER_LOST_CONTACT = 10;
+    BUYER_FAKE_ORDER = 11;
+    BUYER_DRIVER_ASKED = 12;
+    BUYER_DRIVER_LOST_CONTACT = 13;
+    BUYER_DRIVER_NO_ENOUGH_MONEY = 14;
+    BUYER_DRIVER_TOO_FAR = 15;
+    BUYER_WAITED_TOO_LONG = 16;
+    BUYER_ITEMS_UNAVAILABLE = 17;
+    BUYER_PRICE_CHANGED = 18;
+    BUYER_RESTAURANT_CLOSED = 19;
+    BUYER_OTHERS = 50;
+
+    //51~100 merchant
+    MERCHANT_OUT_OF_STOCK = 51;
+    MERCHANT_STORE_WAS_BUSY = 52;
+    MERCHANT_STORE_WAS_CLOSED = 53;
+    MERCHANT_MISSED_ORDER = 54;
+    MERCHANT_REJECT_ORDER = 55;
+    MERCHANT_OTHERS = 100;
+
+    //101~150 driver
+    DRIVER_LATE_DELIVERY = 101;
+    DRIVER_CANNOT_DELIVERY = 102;
+    DRIVER_FIND_NO_RESTAURANT = 103;
+    DRIVER_FIND_NO_BUYER = 104;
+    DRIVER_LOW_DELIVERY_QUALITY = 105;
+    DRIVER_NO_ENOUGH_MONEY = 106;
+    DRIVER_ACCIDENTALLY_TAKE_ORDER = 107;
+    DRIVER_BROKEN_VEHICLE = 108;
+    DRIVER_BUYER_ASKED_BECAUSE_PRICE_CHANGED = 109;
+    DRIVER_ITEMS_UNAVAILABLE = 110;
+    DRIVER_BUYER_ASKED = 111;
+    DRIVER_RESTAURANT_CLOSED = 112;
+    DRIVER_RESTAURANT_REJECTED = 113;
+    DRIVER_FAKE_ORDER = 114;
+    DRIVER_OTHERS = 150;
+
+    //151~200 platform
+    PLATFORM_CANNOT_MATCH_DRIVER = 151;
+    PLATFORM_PAYMENT_FAILED = 152;
+    PLATFORM_ORDER_EXPIRED = 153;
+    PLATFORM_ORDER_EXPIRED_UNCONFIRMED = 154;
+
+    // 新增的order cancel reason 需要在return reason 里面也同步增加
+    PLATFORM_ADMIN_CLOSED_AND_ALGO_REASSIGNED = 156;  // 新增的配送单取消原因，还是用10000以下的code,其他的用10000以上的
+    CUSTOMER_NOT_RECEIVE_FOOD = 10001;
+    CUSTOMER_PLACED_WRONG_ORDER = 10002; // 超时取消
+    CUSTOMER_CHANGE_PAYMENT_METHOD = 10003;
+    CUSTOMER_HAS_CHANGED_PLAN = 10004;
+    CUSTOMER_WANT_CANCEL = 10005;
+    CUSTOMER_WANT_CANCEL_DRIVER_SAID = 10006;
+    CUSTOMER_INPUT_WRONG_ADDRESS = 10007;
+    CUSTOMER_FORGET_USE_VOUCHER = 10008;
+    ORDER_PRICE_CHANGED = 10009;
+    CUSTOMER_LOST_CONTACT = 10010;
+    FAKE_ORDER = 10011;
+    DRIVER_ASK_TO_CANCEL = 10012;
+    DRIVER_LOST_CONTACT = 10013;
+    DRIVER_NO_HAVE_ENOUGH_MONEY = 10014;
+    DRIVER_TOO_FAR = 10015;
+    CUSTOMER_WAITED_TOO_LONG = 10016;
+    ITEMS_UNAVAILABLE = 10017;
+    PRICE_CHANGED = 10018;
+    RESTAURANT_IS_CLOSED = 10019;
+    CUSTOMER_WANTS_TO_EDIT_ORDER = 10020;
+    CUSTOMER_REGRET_AFTER_SUBMIT = 10021;
+    OTHERS_REASON = 10050;
+    RESTAURANT_WAS_BUSY = 10052;
+    RESTAURANT_MISSED_ORDER = 10054;
+    DRIVER_IS_UNRESPONSIVE = 10057;
+    DRIVER_ASKED_TO_CANCEL = 10058;
+    LATE_DELIVERY = 10101;
+    DRIVER_CANNOT_CONTINUE_DELIVERY = 10102;
+    DRIVER_CANNOT_FIND_RESTAURANT = 10103;
+    DRIVER_CANNOT_CONTACT_BUYER = 10104;
+    LOW_DELIVERY_QUALITY = 10105;
+    DRIVER_ACCIDENTALLY_TOOK_ORDER = 10107;
+    DRIVER_VEHICLE_BROKEN = 10108;
+    DRIVER_REPORT_CUSTOMER_ASKED_CANCEL = 10111;
+    RESTAURANT_REJECT_ORDER = 10113;
+    DRIVER_REPORT_FAKE_ORDER = 10114;
+    DRIVER_MOTOR_BROKEN_ON_WAY_TO_MERCHANT = 10115;
+    DRIVER_MOTOR_BROKEN_ON_WAY_TO_BUYER = 10116;
+    DRIVER_LONG_QUEUE_IN_THE_RESTAURANT = 10117;
+    DRIVER_BAD_WEATHER = 10118;
+    CANNOT_MATCH_DRIVER = 10151;
+    PAYMENT_FAILURE = 10152;
+    PAYMENT_TIMEOUT = 10153;
+    ORDER_EXPIRED_UNCONFIRMED = 10154;
+    LOW_COMPLETED_RATE_PREDICATED = 10155;
+
+    SYSTEM_IS_NOT_RESPONDING = 10160;
+    MERCHANT_IS_UNRESPONSIVE = 10161;
+    DRIVER_DO_NOT_PICK_FOOD = 10162;
+    RESTAURANT_NOT_OPERATION_WITH_SHOPEEFOOD = 10163;
+    FOOD_IS_NOT_READY_WHEN_DRIVER_PICK_UP = 10164;
+    ACTUAL_PRICE_NOT_THE_SAME_AS_LIST_PRICE = 10165;
+    CUSTOMER_ADDRESS_NOT_FOUND = 10166;
+    CUSTOMER_DO_NOT_ACCEPT_THE_ORDER = 10167;
+    IMPROPER_FOOD_HANDING_BY_DRIVER = 10168;
+
+    // 301~350 售后原因：Buyer 相关
+    BUYER_PERSONAL_OPINION = 301;
+    BUYER_WRONG_ORDER = 302;
+
+    // 351~400 售后原因：Driver 相关
+    DRIVER_UNDELIVERED = 351;
+    DRIVER_UNCONTACTABLE = 352;
+    DRIVER_IMPROPER_FOOD_HANDLING = 353;
+    DRIVER_FOOD_SEAL_BROKEN = 354;
+    DRIVER_ACCIDENT = 355;
+    DRIVER_MARKUP_WITHOUT_INFORMATION = 356;
+    DRIVER_WRONG_AMOUNT = 357;
+    DRIVER_TAKES_TOO_LONG = 358;
+    DRIVER_BUYER_PAID_TWICE = 359;
+    DRIVER_NO_ENOUGH_CHANGE = 360;
+    DRIVER_NO_PICKUP = 361;
+    DRIVER_DIFFERENT = 362;
+
+    // 401~450 售后原因：Merchant 相关
+    MERCHANT_FOOD_QUALITY_ISSUE = 401;
+    MERCHANT_NO_FOLLOWING_INSTRUCTION = 402;
+    MERCHANT_FOOD_POISONING = 403;
+    MERCHANT_ITEMS_INCORRECT = 404;
+    MERCHANT_FOOD_ALLERGY = 405;
+
+    // 451~500 售后原因：Platform 相关
+    PLATFORM_APP_CRASH = 451;
+    PLATFORM_SUSPICIOUS_COD_ORDER = 452;
+    PLATFORM_HARD_COMPLAINT = 453;
+    PLATFORM_ORDER_PRICE_CHANGED = 454;
+  }
+
+  optional uint64 id = 1;
+
+  optional uint64 order_id = 2;
+  optional CancelSource order_cancel_source = 3 [deprecated = true]; // 改用return_source
+  optional Responsibility order_cancel_responsibility = 4 [deprecated = true];  // 因取消订单发起售后的责任方，之后要改为共用 responsibility 字段
+  optional ReturnReason order_cancel_reason = 5 [deprecated = true];  // 因取消订单发起售后的原因，之后要改为共用 return_reason 字段，目前为了兼容保留这个字段
+  optional string order_cancel_remark = 6 [deprecated = true];  // 因取消订单发起售后的备注，之后要改为共用 return_remark 字段
+  repeated Certificate order_cancel_certs = 7;
+  optional OrderStatus order_reference_status = 8;
+
+  optional RefundType refund_type = 9;
+  optional uint64 refund_amount = 10;
+  optional ReturnStatus return_status = 11;
+  optional CancelSource cancel_source = 12;
+
+  optional uint64 initiation_time = 13;
+  optional uint64 approve_time = 14;
+  optional uint64 complete_time = 15;
+  optional uint64 cancel_time = 16;
+  optional uint64 create_time = 17;
+  optional uint64 update_time = 18;
+
+  optional ReturnType return_type = 19;
+  optional ReturnReason return_reason = 20;
+  optional string return_remark = 21;
+  optional Responsibility responsibility = 22;
+  optional uint64 store_chargeback_amount = 23;
+  optional string creator = 24;
+
+  optional uint64 buyer_id = 25;
+  optional ReturnSource return_source = 26; // return单的发起方
+  optional Proposer proposer = 27; // return单的提出方
+  optional Refund.RefundMethod offline_refund_method = 28;
+  optional StoreChargeBackType store_chargeback_type = 29;
+  optional StoreChargebackMethod store_chargeback_method = 30;
+}
+
+message Refund {
+
+  enum RefundMethod {
+    REFUND_METHOD_DEFAULT = 0;
+    REFUND_METHOD_AUTO = 1[deprecated = true];// 改用RefundMode
+    REFUND_METHOD_MANUAL = 2[deprecated = true];// 改用RefundMode
+    REFUND_METHOD_SPM = 100;
+    REFUND_METHOD_WALLET_ADJUSTMENT = 200;
+    REFUND_METHOD_BANK_TRANSFER = 210;
+  }
+
+  enum RefundMode {
+    REFUND_MODE_AUTO = 1;
+    REFUND_MODE_MANUAL = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 return_id = 2;
+  optional uint64 order_id = 3;
+
+  optional uint64 payment_transaction_ref = 4;
+  optional uint64 refund_transaction_ref = 5;
+  optional uint64 refund_amount = 6;
+  optional RefundStatus refund_status = 7;
+
+  optional uint64 initiation_time = 8;
+  optional uint64 refund_time = 9;
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+
+  optional uint64 checkout_id = 12;
+  optional ReturnOrder.ReturnType return_type = 13;
+  optional string operator = 14;
+  optional RefundMethod refund_method = 15;
+
+  optional string offline_refund_transaction_ref = 16;
+
+  optional uint64 buyer_id = 17;
+
+  optional RefundMode refund_mode = 18;
+}
+
+message UnionCity {
+  optional string state = 1; //洲
+  optional string city = 2; //城市
+  optional string district = 3; //区域
+}
+
+message MassChangeLog {
+  optional uint64 id = 1;
+  optional MassType mass_type = 2;
+  optional ChangeType change_type = 3;
+  optional string filename = 4;
+  optional string file_hash = 5;
+  optional string operator = 6;
+  optional uint64 operate_time = 7;
+  optional uint64 create_time = 8;
+  optional Source operate_source = 9;
+  optional string content = 10;
+  optional MassChangeLogType log_type = 11;
+}
+
+message OrderDiscountCampaign {
+  enum PromotionType {
+    SHIPPING_FEE = 1;
+    ITEM_SUBTOTAL = 2;
+  }
+  enum PromotionStatus {
+    ENABLED = 1;
+    DISABLED = 2;
+  }
+
+  enum DiscountType {
+    PERCENTAGE = 1;
+    AMOUNT = 2;
+  }
+
+  optional uint64 id = 1;
+  optional string campaign_name = 2;
+  optional PromotionType promotion_type = 3;
+  optional PromotionStatus promotion_status = 4;
+  optional DiscountType discount_type = 5;
+  optional uint64 discount_percentage = 6;
+  optional uint64 discount_cap = 7;
+  optional uint64 discount_amount = 8;
+  optional uint64 min_spend = 9;
+  optional uint64 stock = 10;
+  optional uint64 used_quantity = 11;
+  optional uint64 limit_per_day = 12;
+  optional uint64 limit_per_user = 13;
+  optional uint64 start_time = 14;
+  optional uint64 end_time = 15;
+
+  optional string user_tags = 16;
+  optional PartnerType partner_type = 17;
+  optional string store_filename = 18;
+  repeated PaymentMethod payment_methods = 19;
+
+  optional string label = 20;
+  optional string creator = 21;
+  optional uint64 create_time = 22;
+  optional uint64 update_time = 23;
+
+  repeated uint64 location_group_ids = 24;
+}
+
+message UserAttribute {
+  optional string key = 1;
+  optional string value = 2;
+}
+
+enum VoucherStatus {
+  VOUCHER_STATUS_DISABLED = 0;
+  VOUCHER_STATUS_ENABLED = 1;
+  VOUCHER_STATUS_DELETED = 2;
+}
+
+message VoucherIdentifier {
+  optional uint64 promotion_id = 1; // required
+  optional string voucher_code = 2; // required
+  optional string signature = 3; // promotion v1: optional
+  optional Voucher.Reward_Type reward_type = 4; // promotion v1: ref: VoucherRewardType
+  optional string prefix = 5; // voucher code for private voucher, voucher code prefix for public voucher
+  optional int32 length = 6; // Length needed for voucher code. If length > len(prefix), will pad voucher code with random characters
+}
+
+// bitmask
+enum VoucherDistributionMethod {
+  VOUCHER_DISTRIBUTION_METHOD_ALL = 0;
+  VOUCHER_DISTRIBUTION_METHOD_CLAIM = 1;
+  VOUCHER_DISTRIBUTION_METHOD_DISPATCH = 2;
+  VOUCHER_DISTRIBUTION_METHOD_CLAIM_BY_CODE = 4;
+}
+
+message DistributionRule {
+  optional uint32 distribution_method = 1; // ref: VoucherDistributionMethod
+}
+
+enum VoucherQuotaStatus {
+  VOUCHER_QUOTA_STATUS_HAS_QUOTA = 0;
+  VOUCHER_QUOTA_STATUS_NO_QUOTA = 1;
+}
+
+enum VoucherTimeStatus {
+  VOUCHER_TIME_STATUS_UPCOMING = 0;
+  VOUCHER_TIME_STATUS_ONGOING = 1;
+  VOUCHER_TIME_STATUS_EXPIRED = 2;
+}
+
+message ValidityStatus {
+  optional VoucherQuotaStatus quota_status = 1;
+  optional VoucherTimeStatus time_status = 2;
+}
+
+message MultiLangTxt {
+  optional string language = 1;
+  optional string value = 2;
+  optional string key = 3;
+}
+
+message VoucherTAndC {
+  optional string section_title = 1; // eg: "How to Use"
+  optional string section_content = 2; // eg: "a paragraph to describe how to use"
+  optional string section_title_key = 3; // transify key for the section_title
+}
+
+message DisplayInfo {
+  optional string icon = 1;
+  optional string icon_text = 2;
+  optional string title = 3;
+  optional string label = 4;
+  repeated MultiLangTxt customized_labels = 5;
+  repeated VoucherTAndC tc_section_list = 6;
+  optional bool display_on_landing_page = 7;
+  optional VoucherCustomisedLabelList browse_list_tags = 8;
+}
+
+message ExtraInfo {
+  optional DisplayInfo display_info = 1;
+}
+
+message PaymentMethodScope {
+  repeated PaymentMethod payment_methods = 1;
+  repeated uint64 spm_channel_ids = 2;
+}
+
+message PaymentRules {
+  optional PaymentMethodScope payment_method_scope = 1;
+  optional OrderScope order_scope = 2;
+  repeated string CreditCardBins = 3;
+  repeated int32 voucher_payment_types = 4;
+}
+
+message LocationScope {
+  repeated uint64 location_group_ids = 1;
+}
+
+message OrderScope {
+  optional uint64 min_spend = 1;
+}
+
+message StoreScope {
+    enum StoreScopeType {
+        SHOPEE_FOOD_STORE_SCOPE_ALL = 1;
+        SHOPEE_FOOD_STORE_SCOPE_BY_STORE_IDS = 2; //deprecated, should using 3
+        SHOPEE_FOOD_STORE_SCOPE_BY_COMPOSITE_CONDITION = 3;
+        SHOPEE_FOOD_STORE_SCOPE_BY_STORE_TAG_IDS = 4;
+    }
+    optional StoreScopeType scope_type = 1; // Ref: ShopeeFoodStoreScopeType
+    repeated uint64 store_ids = 2;
+    repeated uint64 exclude_store_ids = 3;
+    repeated uint32 store_partner_types = 4;
+    repeated uint64 store_tag_ids = 5;
+}
+
+message ProductRules {
+  optional LocationScope location_scope = 1;
+  optional StoreScope store_scope = 2;
+}
+
+message UserRules {
+  repeated UserAttribute user_attributes = 1;
+}
+
+message Reward {
+  optional int64 amount = 1;
+  optional int64 percentage = 2;
+  optional int64 cap = 3;
+}
+
+enum VoucherRewardType {
+  VOUCHER_REWARD_PRODUCT_DISCOUNT = 0;
+  VOUCHER_REWARD_COIN_CASHBACK = 1;
+  VOUCHER_REWARD_FREE_SHIPPING = 2;
+  VOUCHER_REWARD_PREPAID_CASHBACK = 3;
+  VOUCHER_REWARD_PREPAID_COIN_CASHBACK = 4;
+  VOUCHER_REWARD_PREPAID_DISCOUNT = 5;
+  VOUCHER_REWARD_SHIPPING_FEE = 6;
+  VOUCHER_REWARD_ADMIN_FEE_DISCOUNT = 7;
+  VOUCHER_REWARD_INTEREST_RATE_FEE_DISCOUNT = 8;
+}
+
+message VoucherRewardDiscount {
+  optional uint64 reward_discount = 1;
+  optional uint64 reward_coin = 2;
+}
+
+message UserVoucher {
+  optional uint64 user_voucher_id = 1;
+  optional uint64 user_id = 2;
+  optional VoucherIdentifier voucher_identifier = 3;
+  optional uint64 usage_count = 4;
+  optional uint64 usage_limit = 5;
+  optional Voucher voucher = 6;
+}
+
+message Voucher {
+  enum Reward_Type {
+    DISCOUNT = 0;
+    ITEM_SUBTOTAL = 1;
+    COIN_CASHBACK = 2;
+    SHIPPING_FEE = 3;
+  }
+
+  optional VoucherIdentifier identifier = 1;
+  optional Reward_Type reward_type = 2; // promotion v1: ref: Voucher_Reward_Type
+  optional uint64 reward_discount = 3; // promotion v1: discount voucher reward, deduct how much money
+  optional int64 reward_coin = 4; // promotion v1: coin-cashback voucher reward, earn how many coins(DB coin)
+  optional uint64 reward_coin_equivalent_cash = 5; // promotion v1: equivalent cash value of the coins earned
+  optional uint64 reward_shipping_fee_discount = 6; // promotion v1: shipping fee deduction
+  optional string title = 7;
+  optional uint64 create_time = 8;
+  optional string created_by = 9;
+  optional string description = 10;
+  optional uint64 distribution_start_time = 11;
+  optional uint64 distribution_end_time = 12;
+  optional DistributionRule distribution_rule = 13;
+  optional uint64 distribution_total_limit = 14;
+  optional uint64 distribution_total_count = 15;
+  optional ValidityStatus distribution_validity_status = 16;
+  optional ExtraInfo extra_info = 17;
+  optional string voucher_name = 18;
+  optional PaymentRules payment_rules = 19;
+  optional ProductRules product_rules = 20;
+  optional Reward reward = 21; // promotion v2: ref Reward
+  optional VoucherRewardType voucher_reward_type = 22; // promotion v2: ref: VoucherRewardType
+  optional uint64 update_time = 23;
+  optional string updated_by = 24;
+  optional uint32 usage_duration_hrs = 25;
+  optional uint64 usage_start_time = 26;
+  optional uint64 usage_end_time = 27;
+  optional uint64 usage_per_user_limit = 28;
+  optional uint64 usage_total_count = 29;
+  optional uint64 usage_total_limit = 30;
+  optional ValidityStatus usage_validity_status = 31;
+  optional UserRules user_rules = 32;
+  optional uint64 voucher_id = 33;
+  optional string voucher_code = 34;
+  optional VoucherStatus voucher_status = 35;
+  optional ServiceType service_type = 36;
+  optional VoucherRewardDiscount voucher_reward_discount = 37; // promotion v2: ref: VoucherRewardDiscount
+  optional uint64 co_fund_campaign_id = 38;
+  optional uint64 merchant_subsidy_amount = 39; // co-fund merchant subsidy, 该字段只在下单use promotion时，与订单改单重算优惠时，由promotionsvr带到order，前端不传，其他时候都为0。
+  optional bool non_claimable_by_code = 40;
+  optional int32 suffix_length = 41;
+  optional Voucher_Type voucher_type = 42; //Voucher_Type
+  optional int32 source = 43; //Voucher_Source
+}
+
+enum Voucher_Source {
+  CAMPAIGN = 1;
+  ADMIN = 2;
+}
+
+enum Voucher_Type {
+  VOUCHER_SPX = 1;
+  VOUCHER_FOODY = 0;
+}
+
+message VoucherCustomisedLabelList {
+    repeated VoucherCustomisedLabel labels = 1;
+}
+
+// voucher customised label supports multi language
+message VoucherCustomisedLabel {
+    repeated MultiLangTxt label = 1;
+    optional int32 color = 2; // ref: Color
+    optional string image_hash = 3;
+
+}
+
+enum VoucherTaskType {
+  TASK_TYPE_DISPATCH_VOUCHER_BY_USER_ID = 1;
+  TASK_TYPE_MANIPULATE_VOUCHER_LABEL = 2;
+  TASK_TYPE_DISPATCH_VOUCHER_BY_USER_TAG = 3;
+}
+
+enum VoucherTaskStatus {
+  TASK_STATUS_PENDING = 0;
+  TASK_STATUS_PROCESSING = 1;
+  TASK_STATUS_FINISHED = 2;
+  TASK_STATUS_STOPPED = 3;
+}
+
+message VoucherTaskFile {
+  enum FileType {
+    FILE_TYPE_CSV = 1;
+  }
+
+  optional string name = 1;
+  optional FileType file_type = 2;
+  optional string url = 3;
+  optional string hash = 4;
+  optional uint64 create_time = 5;
+}
+
+message VoucherClaimStatus {
+  optional uint64 voucher_id = 1;
+  optional string voucher_code = 2;
+  optional bool claimed = 3; // true: already claimed; false: not claimed yet
+}
+
+message VoucherTask {
+  optional uint64 id = 1;
+  optional VoucherTaskType task_type = 2;
+  optional VoucherTaskStatus task_status = 3;
+  optional int32 success_count = 4;
+  optional int32 fail_count = 5;
+  optional int32 execute_count = 6;
+  optional int32 total_count = 7;
+  optional uint64 start_time = 8;
+  optional uint64 upload_time = 9;
+  optional string operator = 10;
+  optional VoucherTaskFile upload_file = 11;
+  repeated VoucherTaskFile result_files = 12;
+  optional UserAttribute user_attribute = 13;
+}
+
+message SpendCoins {
+  optional int64 coins = 1;
+  optional uint64 discount = 2;
+}
+
+message OrderDiscount {
+  optional uint64 campaign_id = 1;
+  optional OrderDiscountCampaign.PromotionType promotion_type = 2;
+  optional uint64 discount = 3;
+  optional string campaign_name = 4;
+}
+
+message EarnCoins {
+  enum Type {
+    ORDER = 1;
+    VOUCHER = 2;
+  }
+
+  optional Type type = 1;
+  optional int64 coins = 2;
+}
+
+message Promotion {
+  optional Voucher voucher = 1 [deprecated = true]; // please use "vouchers" instead
+  optional SpendCoins spend_coins = 2;
+  repeated OrderDiscount order_discounts = 3;
+  optional EarnCoins earn_coins = 4;
+  repeated Voucher vouchers = 5;
+  optional FlashSaleOrderItem flash_sale_order_item = 6;
+}
+
+enum ItemDiscountCreatorSource {
+  CREATOR_ADMIN = 0;
+  CREATOR_MERCHANT = 1;
+}
+
+message ItemDiscountCampaign {
+  enum Status {
+    DISABLED = 0;
+    ENABLED = 1;
+  }
+  optional uint64 id = 1;
+  optional string campaign_name = 2;
+  optional foody_base.ItemDiscountType promotion_type = 3;
+  optional uint64 start_time = 4;
+  optional uint64 end_time = 5;
+  optional Status promotion_status = 6;
+  optional uint64 item_quantity = 7;
+  optional uint64 store_id = 8;
+  optional string creator = 9;
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+  optional uint32 max_discount_percentage = 12; // 10000 * (dish_price - discount_price) / dish_price
+  repeated ItemDiscount item_discounts = 13;
+  optional foody_base.DiscountType discount_type = 14;
+  optional foody_base.ItemDiscountCreatorSource creator_source = 15;
+  optional uint64 max_discount_amount = 16;
+  optional string note = 17;
+  optional string purpose = 18;
+  optional string user_tags = 19;
+  optional foody_base.ItemDiscountCampaignAppliedTimes applied_times = 20;
+}
+
+message ItemDiscount {
+  enum Status {
+    DISABLED = 0;
+    ENABLED = 1;
+    DELETED = 2;
+  }
+  optional uint64 id = 1;
+  optional uint64 dish_id = 2;
+  optional uint64 discount_price = 3;      // 折后价
+  optional uint64 limit_per_order = 4;     // 每单限制的单品可折扣数目
+  optional Status discount_status = 5;     // 管理端使用，是否启用
+  optional uint64 campaign_id = 6;
+  optional uint64 store_id = 7;
+  optional string creator = 8;
+  optional uint64 create_time = 9;
+  optional uint64 update_time = 10;
+
+  optional uint64 campaign_start_time = 11; // 附加来自 item discount campaign 的字段
+  optional uint64 campaign_end_time = 12;   // 附加来自 item discount campaign 的字段
+  optional uint32 discount_percentage = 13; // 10000 * percentage
+  optional string group_id = 14;
+  optional foody_base.DiscountType discount_type = 15;
+  optional uint64 discount_amount = 16; //折扣固定减的价格
+  optional foody_base.ItemDiscountCreatorSource creator_source = 17;
+  optional uint32 stock = 18;
+  optional uint32 sold_num = 19;
+}
+
+message ItemDiscountRecord {
+  enum SoldStatus {
+    SoldInited = 1;
+    SoldCompleted = 2;
+    SoldFailed = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 item_discount_id = 2;
+  optional uint64 order_id = 3;
+  optional uint64 order_item_id = 4;
+  optional uint64 buyer_id = 5;
+  optional uint64 store_id = 6;
+  optional uint64 dish_id = 7;
+
+  optional uint32 quantity = 8;
+  optional uint32 return_quantity = 9;
+  optional uint32 cancel_quantity = 10;
+
+  optional SoldStatus sold_status = 11;
+
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional uint64 return_time = 14;
+  optional uint64 cancel_time = 15;
+}
+
+enum DiscountType {
+  PRICE = 0;
+  PERCENTAGE = 1;
+  AMOUNT = 2;
+}
+
+enum ItemDiscountType{
+  None = 0;
+  PriceSlash = 1;
+  FlashSale = 2;
+}
+
+message PromotionObject {
+
+  enum PromotionType {
+    ITEM_DISCOUNT = 1;
+    FLASH_SALE = 2;
+    VOUCHER = 3;
+  }
+
+  enum PromotionStatus {
+    DISABLED = 0;
+    ENABLED = 1;
+  }
+
+  enum PromotionShowStatus {
+    PENDING = 1;
+    UPCOMING = 2;
+    ONGOING = 3;
+    ENDED = 4;
+  }
+
+  message PromotionExtInfo {
+    repeated string tags = 1;
+    optional string promotion_image = 2;
+    repeated Button buttons = 3;
+    repeated Attribute attributes = 4;
+    optional string review_status = 5;
+  }
+
+  message PromotionNameInfo {
+    repeated MultiLangTxt multi_lang_name = 1;
+    optional string name = 2;
+  }
+
+  optional uint64  promotion_id = 1;
+  optional string  promotion_name = 2;
+  optional uint64  promotion_tool_id = 3;
+  optional uint64  store_id = 4;
+  optional PromotionType promotion_type = 5;
+  optional uint64  start_time = 6;
+  optional uint64  end_time = 7;
+  optional PromotionStatus status = 8;
+  optional PromotionShowStatus show_status = 9; //该字段mis应该只有实时查时需要使用到，同步不能使用
+  optional PromotionExtInfo ext_info = 10;
+  optional uint64  create_time = 11;
+  optional uint64  update_time = 12;
+  optional PromotionNameInfo  promotion_name_info = 13;
+}
+
+message Button {
+  enum ButtonType{
+    PRIMARY = 1;
+    SECONDARY = 2;
+  }
+  optional string button_name = 1;
+  optional string transify_key = 2;
+  optional RedirectInfo redirect_info = 3;
+  optional ButtonType button_type = 4;
+}
+
+message Attribute {
+  enum AttributeType{
+    TEXT = 1;
+    IMAGE = 2;
+  }
+  message KeyInfo {
+    optional string key = 1;
+    optional string transify_key = 2;
+  }
+
+  message ValueInfo {
+     enum ValueInfoType{
+         STRING = 1;
+         TIME = 2;
+         INT = 3;
+     }
+    optional string value = 1;
+    optional string transify_key = 2;
+    optional ValueInfoType type = 3;
+  }
+  optional KeyInfo key_info = 1;
+  optional ValueInfo value_info = 2;
+  optional AttributeType attribute_type = 3;
+}
+
+message RedirectInfo{
+  message ParamPair{
+    optional string key = 1;
+    optional string value = 2;
+  }
+  optional string redirect_url = 1;
+  repeated ParamPair param_pairs = 2;
+}
+
+message PromotionTool {
+  enum PromotionToolType {
+    ITEM_DISCOUNT = 1;
+    FLASH_SALE = 2;
+    VOUCHER = 3;
+  }
+
+   enum WhiteListScope {
+       NONE = 1;
+       ALL = 2;
+       STORE_IDS = 3;
+   }
+
+  message PromotionToolExtInfo {
+
+    message PromotionToolNameInfo {
+      optional string  promotion_tool_name = 1;
+      optional string  transify_key = 2;
+    }
+
+    message DescriptionInfo {
+      optional string description = 1;
+      optional string transify_key = 2;
+    }
+
+    optional PromotionToolNameInfo promotion_tool_name_info = 1;
+    optional RedirectInfo  redirect_info = 2;
+    optional DescriptionInfo  description_info = 3;
+    optional string  logo = 4;
+  }
+
+  optional uint64 id = 1;
+  optional PromotionToolType  promotion_tool_type = 2;
+  optional PromotionToolExtInfo ext_info = 3;
+  optional uint64  create_time = 4;
+  optional uint64  update_time = 5;
+  optional WhiteListScope  whitelist_scope =6;
+}
+
+message EventPromotion {
+  enum PromotionType {
+     ITEM_DISCOUNT = 1;
+     FLASH_SALE = 2;
+     VOUCHER = 3;
+   }
+
+   enum EventPromotionShowStatus {
+     PENDING = 1;
+     UPCOMING = 2;
+     ONGOING = 3;
+     ENDED =4;
+   }
+
+   enum StoreSessionStatus{
+     INVITED =1;
+     UNINVITED=2;
+     JOINED =3;
+     TERMINATED =4;
+     WITHDRAWN =5;
+   }
+
+   message EventPromotionExtInfo {
+    repeated string tags = 1;
+    optional string promotion_image = 2;
+    repeated Button buttons = 3;
+    repeated Attribute attributes =4;
+    optional string review_status = 5;
+ }
+
+  enum EventPromotionStatus {
+     DISABLED = 0;
+     ENABLED = 1;
+   }
+
+  message EventPromotionNameInfo {
+     repeated MultiLangTxt multi_lang_name = 1;
+     optional string name =2;
+  }
+
+  optional uint64  id = 1;
+  optional uint64  event_id = 2;
+  optional EventPromotionNameInfo  event_promotion_name_info = 3;
+  optional uint64  store_id = 4;
+  optional PromotionType   promotion_type = 5;
+  optional uint64  start_time = 6;
+  optional uint64  end_time = 7;
+  optional uint64  joined_time = 8;
+  optional EventPromotionShowStatus show_status = 9;
+  optional StoreSessionStatus store_session_status =10;
+  optional EventPromotionStatus status = 11;
+  optional EventPromotionExtInfo ext_info = 12;
+  optional uint64  create_time = 13;
+  optional uint64  update_time = 14;
+  optional uint64  register_start_time = 15;
+  optional uint64  register_end_time = 16;
+  optional uint64  sync_time = 17;
+}
+
+message EventObject {
+
+  enum PromotionType {
+    ITEM_DISCOUNT = 1;
+    FLASH_SALE = 2;
+    VOUCHER = 3;
+  }
+
+   enum WhiteListScope {
+     NONE = 1;
+     ALL = 2;
+     STORE_IDS = 3;
+   }
+
+
+  enum EventStatus {
+    DISABLED = 0;
+    ENABLED = 1;
+  }
+
+  message EventExtInfo {
+     repeated string tags = 1;
+     optional string main_banner = 2;
+     optional string promotion_list_image = 3;
+     repeated Attribute attributes =4;
+     optional RedirectInfo  redirect_info = 5;
+     repeated Button buttons = 6;
+  }
+
+  message EventNameInfo {
+     repeated MultiLangTxt multi_lang_name = 1;
+     optional string name =2;
+  }
+
+  optional uint64  event_id = 1;
+  optional EventNameInfo  event_name_info = 2;
+  optional PromotionType  promotion_type = 3;
+  optional uint64  register_start_time = 4;
+  optional uint64  register_end_time = 5;
+  optional uint64  start_time = 6;
+  optional uint64  end_time = 7;
+  optional EventExtInfo  event_ext_info = 8;
+  optional WhiteListScope  whitelist_scope =9;
+  optional uint64  create_time = 10;
+  optional uint64  update_time = 11;
+  optional EventStatus status = 12;
+}
+
+message WhiteList {
+   enum WhiteListStatus {
+     VALID = 1;
+     INVALID = 2;
+   }
+  optional uint64  event_id = 1;
+  optional uint64  store_id = 2;
+  optional WhiteListStatus   status =3 ;
+  optional uint64  create_time = 4;
+  optional uint64  update_time = 5;
+  optional uint64  sync_time = 6;
+}
+
+message Tip {
+  enum TipStatus {
+    TIP_NONE = 0;
+    TIP_CREATED = 1;
+    TIP_PAID = 2;
+    TIP_CANCELED = 3;
+    TIP_COMPLETED = 4;
+  }
+  optional uint64 id = 1;
+  optional uint64 buyer_id = 2;
+  optional uint64 driver_id = 3;
+  optional uint64 wallet_id = 4;
+  optional uint64 order_id = 5;
+  optional TipStatus tip_status = 6;
+
+  optional uint64 amount = 7;
+  optional uint64 transaction_ref = 8;
+  optional PaymentMethod payment_method = 9;
+  optional uint64 payment_channel_id = 10; // 由 SPM 定义的支付渠道 ID
+  optional string payment_channel_option = 11; // 由 SPM 提供的支付渠道选项信息
+  optional string payment_link = 12; // 由 SPM 返回的支付链接
+  optional string currency = 13;
+  optional string region = 14;
+
+  optional uint64 initial_time = 15;
+  optional uint64 payment_time = 16;
+  optional uint64 cancel_time = 17;
+  optional uint64 complete_time = 18;
+  optional uint64 create_time = 19;
+  optional uint64 update_time = 20;
+  optional uint64 delivery_order_id = 21;
+  optional uint64 express_id = 22;
+  optional ServiceType service_type = 23;
+  optional uint64 old_id = 24;
+}
+
+message StoreChargeback {
+  optional uint64 id = 1;
+  optional uint64 store_id = 2;
+  optional uint64 return_id = 3;
+  optional uint64 order_id = 4;
+  optional ChargebackStatus chargeback_status = 5;
+  optional uint64 chargeback_amount = 6;
+  optional uint64 complete_time = 7;
+  optional uint64 cancel_time = 8;
+  optional string operator = 9;
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+  optional StoreChargebackMethod chargeback_method = 12;
+  optional string transaction_ref = 13;
+}
+
+//############## DriverIncentive ################
+
+message BaseRule
+{
+  optional uint32 point = 1;
+  optional uint32 week_bits = 2;
+  optional uint64 interval_start = 3;
+  optional uint64 interval_end = 4;
+  optional ServiceType service_type = 5;
+
+}
+message SpecialRule
+{
+  enum RuleType
+  {
+    TIME = 1;
+  }
+  message TimeRule
+  {
+    optional uint32 week_bits = 1;
+    optional uint64 interval_start = 2;
+    optional uint64 interval_end = 3;
+  }
+
+  message LocationGroupRule {
+    repeated uint64 location_group_ids = 1;
+    optional string location_group_description = 2;
+  }
+
+  message OrderStackRule {
+    optional Enabled is_pick_up_point_enabled = 1;
+    optional Enabled is_drop_off_point_enabled = 2;
+  }
+
+  message Detail
+  {
+    optional TimeRule time_rule = 1;
+    optional LocationGroupRule location_group_rule = 2;
+    optional OrderStackRule order_stack_rule = 3;
+  }
+  optional uint32 point = 1;
+  optional RuleType type = 2;//deprecated
+  optional Detail detail = 3;
+  optional ServiceType service_type = 4;
+}
+
+message IncentivePlan {
+  message CashRule
+  {
+    optional uint32 point = 1;
+    optional uint64 amount = 2;
+  }
+  message Requirement
+  {
+    optional uint32 min_completion_rate = 1; // 9999=99.99
+    optional float min_rating_score = 2; // 4.55
+  }
+  enum PlanStatus
+  {
+    NORMAL = 1;
+    TERMINATED = 2;
+  }
+
+  optional uint64 id = 1;
+  optional string plan_name = 2;
+  optional string description = 3;
+  optional PlanStatus plan_status = 4;
+  repeated CashRule cash_rules = 5;
+  optional Requirement requirement = 6;
+  optional BaseRule base_rule = 7;
+  repeated SpecialRule special_rules = 8;
+  optional string creator = 9;
+  optional uint64 start_time = 10;
+  optional uint64 end_time = 11;
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional string location_group_description = 14;
+  optional string timezone = 15;
+  repeated BaseRule base_rules = 16;
+  optional uint32 rank = 17;
+  optional uint64 cash_conversion_rule_id = 18;
+  optional uint64 valid_time = 19;
+}
+
+
+message IncentiveTask {// 骑手激励任务
+  enum CreditStatus {
+    CREATED = 0;
+    PENDING = 1;
+    SUCCESS = 2;
+  }
+  enum TaskStatus {
+    TASK_DEFAULT = 0;
+    TASK_PENDING = 1;
+    TASK_FINISHED = 2;
+    TASK_CLOSED = 3;
+    TASK_POINT_CALCULATED = 7;
+    TASK_BONUS_CALCULATED = 8;
+  }
+  enum PointSettlementType {
+    POINT_SETTLEMENT_TYPE_UNKNOWN = 0;
+    POINT_SETTLEMENT_TYPE_ELIGIBLE = 1;
+    POINT_SETTLEMENT_TYPE_INELIGIBLE = 2;
+  }
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional uint64 plan_id = 3;
+  optional uint32 task_date = 4;
+  optional uint64 start_time = 5;
+  optional uint64 end_time = 6;
+
+  optional uint32 point = 7;
+  optional CreditStatus credit_status = 8;
+  optional uint64 amount = 9;
+
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+  optional TaskStatus task_status = 12;
+  optional uint64 tax_inclusive_amount = 13;
+  optional PointSettlementType point_settlement_type = 14;
+  optional uint32 remaining_order = 15;
+}
+
+message CashConversionRule {
+  message CashRule
+  {
+    optional uint32 point = 1;
+    optional uint64 amount = 2;
+  }
+
+  optional uint64 id = 1;
+  optional string rule_name = 2;
+  repeated CashRule cash_rules = 3;
+  optional Enabled is_selection_enabled = 4;
+  optional string creator =5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+}
+
+message IncentiveSettlement {
+  enum SettlementStatus {
+    INCENTIVE_SETTLEMENT_STATUS_DEFAULT = 0;
+    INCENTIVE_SETTLEMENT_STATUS_SETTLING = 1;
+    INCENTIVE_SETTLEMENT_STATUS_BONUS_CALCULATED = 2;
+    INCENTIVE_SETTLEMENT_STATUS_FINISHED = 3;
+  }
+  enum CreditStatus {
+    INCENTIVE_SETTLEMENT_CREDIT_STATUS_CREATE = 0;
+    INCENTIVE_SETTLEMENT_CREDIT_STATUS_PENDING = 1;
+    INCENTIVE_SETTLEMENT_CREDIT_STATUS_SUCCESS = 2;
+  }
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional uint32 settlement_date = 3;
+  optional SettlementStatus settlement_status = 4;
+  optional uint32 point = 5;
+  optional uint64 tax_inclusive_amount = 6;
+  optional uint64 amount = 7;
+  optional CreditStatus credit_status = 8;
+  optional uint64 cash_conversion_rule_id = 9;
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+}
+
+//############## DriverIncentive end ################
+
+message VoucherRecord {
+  enum Status {
+    CREATED = 1;
+    COMPLETED = 2;
+    CANCELING = 3;
+    CANCELED = 4;
+    RETURNED = 5;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 voucher_id = 2;
+  optional string voucher_code = 3;
+  optional string signature = 4;
+  optional string reference_id = 5;
+  optional string tcc_transaction_id = 6;
+  optional uint64 order_id = 7;
+  optional uint64 store_id = 8;
+  optional uint64 buyer_id = 9;
+  optional string data = 10;
+  optional Status status = 11;
+  optional uint64 CompleteTime = 12;
+  optional uint64 ReturnTime = 13;
+  optional uint64 CancelTime = 14;
+  optional uint64 CreateTime = 15;
+  optional uint64 UpdateTime = 16;
+  optional string anti_fraud = 17;
+}
+
+message AntiFraud {
+  optional string DeviceFingerprint = 1;
+  optional string TongdunBlackbox = 2;
+  optional string SecurityDf = 3;
+  optional string Ip = 4;
+  optional string AppVersionName = 5;
+  optional uint64 UserAgentType = 6;
+  optional uint64 AppType = 7;
+  optional string rn_version = 8;
+}
+
+message DriverWalletPayment {
+  enum PaymentType {
+    PAY_OUT = 1;
+    PAY_IN = 2;
+  }
+
+  enum PaymentStatus {
+    INITED = 1;
+    COMPLETED = 2;
+    REVOKED = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 merchant_id = 2;
+  optional PaymentType payment_type = 3;
+  optional uint64 driver_id = 4;
+  optional uint64 amount = 5;
+  optional PaymentStatus payment_status = 6;
+  optional uint64 reference_id = 7;
+
+  optional uint64 init_time = 8;
+  optional uint64 complete_time = 9;
+  optional uint64 revoke_time = 10;
+  optional uint64 create_time = 11;
+  optional uint64 update_time = 12;
+  optional ServiceType service_type = 13;
+}
+
+message DriverWalletRecord {
+  enum TransactionType {
+    TOP_UP = 1;
+    WITHDRAW = 2;
+    PAYMENT = 3;
+  }
+
+  enum AmountType {
+    CREDIT = 1;
+    DEBIT = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 wallet_id = 2;
+  optional uint64 amount = 3;
+  optional int64 balance = 4;
+  optional string currency = 5;
+  optional TransactionType transaction_type = 6;
+  optional bool is_revoked = 7;
+  optional uint64 transaction_id = 8;
+  optional RecordTag tag = 9;
+  optional string remark = 10;
+  optional string extend = 11;
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional AmountType amount_type = 14;
+  optional uint64 balance_version = 15;
+}
+
+//############## DriverQuality start ################
+
+message Penalty{
+  enum Category{
+    WARNING = 1;
+    SUSPENSION = 2;
+    TERMINATION = 3;
+    QMS_POINTS = 4;
+    FINE = 5;
+  }
+
+  enum SuspensionType{
+    DEFAULT = 0;
+    CANNOT_CHECKIN = 1;
+    CANNOT_WITHDRAW = 2;
+  }
+
+  enum FineType{
+    TYPE_FINE_DEFAULT = 0;
+    TYPE_FINE_CUSTOMIZED = 1;
+    TYPE_FINE_SHIPPING_FEE = 2;
+    TYPE_FINE_INCENTIVE_BONUS = 3;
+  }
+
+  enum Status{
+    INITIATED = 1;
+    PENALIZED = 2;
+    PENALIZED_FAILED = 3;
+    REVOKED = 4;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional Category penalty_category = 3;
+  optional QualitySource penalty_source = 4;
+
+  //suspension
+  optional SuspensionType suspension_type = 5;
+  optional uint32 suspension_seconds = 6;
+
+  //fine
+  optional FineType fine_type = 7;
+  optional uint64 fine_amount = 8;
+  optional uint64 fine_payment_id = 9;//depends driverwallet interface
+
+  //point
+  optional uint32 points = 10;
+  optional uint32 points_reset_seconds = 11;
+  optional uint64 points_reset_time = 12;
+  optional uint32 current_points = 13;
+
+  //状态
+  optional Status penalty_status = 20;
+  optional uint64 initial_time = 21;
+  optional uint64 penalize_time = 22;
+  optional uint64 penalize_fail_time = 23;
+  optional uint64 revoke_time = 24;
+
+  //运营
+  optional string revoke_reason = 30;
+  optional string operator = 31;
+  optional string creator = 32;
+
+  //关联
+  repeated uint64 parent_ids = 34;
+  repeated uint64 violation_ids = 35;
+  optional uint64 delivery_order_id = 36;
+  optional string rule_group = 37;
+
+  optional uint64 create_time = 41;
+  optional uint64 update_time = 42;
+  optional uint64 estimate_execute_time = 43;
+  optional uint64 event_time = 44;
+
+  optional uint64 violation_id = 45;//直接原因violation levelrule间接产生的没有此字段
+  optional ServiceType service_type = 46;
+  optional uint64 express_id = 47;
+}
+
+message Violation {
+
+  enum Status {
+    INITIATED = 1;
+    NO_NEED_PENALTY = 2;
+    PENALIZING = 3;
+    PENALIZED = 4;
+    FAILED_TO_PENALIZE = 5;
+    REVOKED = 6;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional string delivery_order_id = 3;
+  optional string event_description = 4;
+  optional uint64 event_time = 5;
+
+  //关联规则
+  optional string rule_code = 10;
+  optional string rule_description = 11;
+  optional string rule_name = 12;
+  optional string rule_group = 13;
+  optional string rule_group_description = 14;
+
+  //状态信息
+  optional Status violation_status = 20;
+  optional uint64 initial_time = 21;
+  optional uint64 no_need_penalize_time = 22;
+  optional uint64 penalizing_time = 23;
+  optional uint64 penalize_time = 24;
+  optional uint64 penalize_fail_time = 25;
+  optional uint64 revoke_time = 26;
+
+  //违规上下文
+  optional QualitySource violation_source = 30;
+  optional string creator = 31;
+  optional uint32 creator_shift = 32;
+  optional uint64 customized_fine_amount = 33;
+  optional uint64 shipping_fee_fine_amount = 34;
+  optional uint32 incentive_bonus_fine_enable = 35;
+
+  //运营操作
+  optional string revoke_reason = 40;
+  optional string revoke_operator = 41;
+
+  //时间戳
+  optional uint64 create_time = 42;
+  optional uint64 update_time = 43;
+
+  optional ServiceType service_type = 44;
+  optional uint64 express_id = 45;
+}
+
+message Quality {
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional int32 point = 3;
+  optional uint64 restrict_withdraw_end_time = 4;
+  optional uint64 restrict_checkin_end_time = 5;
+  optional foody_base.Enabled terminate_enabled = 6;
+  optional uint64 create_time = 7;
+  optional uint64 update_time = 8;
+}
+
+message OrderConfig {
+  optional uint64 id = 1;
+  optional uint64 merchant_confirm_timeout = 2;
+  optional string operator = 3;
+
+  optional uint64 create_time = 101;
+  optional uint64 update_time = 102;
+}
+
+message PaymentConfig{
+  optional uint64 id = 1;
+  optional uint32 payment_method = 2;
+  optional uint32 switch = 3;
+  optional uint32 channel_id = 4;
+  optional string operator = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+}
+
+message Area {
+  message ServiceTypeFlag {
+    optional foody_base.Enabled food_enabled = 1;
+    optional foody_base.Enabled spx_instant_shopee_enabled = 2;
+    optional foody_base.Enabled spx_instant_enabled = 3;
+  }
+  optional uint64 id = 1;
+  optional string area_name = 2;
+  optional Status area_status = 3;
+  optional string creator = 4;
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+  optional string timezone = 7;
+  optional ServiceTypeFlag service_type_flag = 8;
+  optional string operator = 9;
+  optional uint64 hidden_time = 10;
+
+  enum Status {
+    INACTIVE = 0;
+    ACTIVE = 1;
+  }
+}
+
+message District {
+  optional uint64 id = 1;
+  optional string district_name = 2;
+  optional uint64 city_id = 3;
+  optional string city_name = 4;
+  optional string state_name = 5;
+  optional uint64 area_id = 6;
+  optional Status status = 7;
+  optional uint64 create_time = 8;
+  optional uint64 update_time = 9;
+  optional Area.ServiceTypeFlag service_type_flag = 10;
+  optional uint32 version = 11;
+  enum Status {
+    INACTIVE = 0;
+    ACTIVE = 1;
+  }
+}
+
+message LocationGroup {
+  optional uint64 id = 1;
+  optional string group_name = 2;
+  optional uint64 area_id = 3;
+  optional uint32 is_default = 4;
+  optional string creator = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+  optional string timezone = 8;
+  optional uint64 hidden_time = 9;
+}
+
+message DistrictLocationGroupBinding {
+  optional uint64 district_id = 1;
+  optional uint64 location_group_id = 2;
+  optional uint32 is_default = 3;
+
+  optional uint64 create_time = 4;
+  optional uint64 update_time = 5;
+}
+//############## LocationGroup end ################
+
+message AlgoParameterConfig {
+  optional uint64 id = 1;
+  optional Module module = 2;
+  optional Priority priority = 3;
+  optional uint64 area_id = 4;
+  optional string area_name = 5;
+  optional uint64 district_id = 6;
+  optional string district_name = 7;
+  optional Parameter parameter = 8;
+  optional string creator = 9;
+  optional uint64 create_time = 10;
+  optional uint64 update_time = 11;
+  optional ServiceType service_type = 12;
+
+  enum Module{
+    Module_Unknown = 0;
+    Module_OrderFlow = 1;
+    Module_DriverFiltering = 2;
+    Module_MatchAssessment = 3;
+    Module_ETA = 4;
+    Module_ShippingFee = 5;
+    Module_BuyerShippingFee = 6;
+    Module_DriverShippingFee = 7;
+    Module_ServiceFee = 8;
+    Module_DelayAssign = 9;
+    Module_DFF = 10;
+    Module_Insurance = 11;
+    Module_Instant_Shopee_Shipping_Fee = 12;
+    Module_Instant_Delivery_Shipping_Fee = 13;
+    Module_Small_Order_Fee = 14;
+    Module_Non_Partner_Fee = 15;
+    Module_Working_Hours = 16;
+  }
+
+  enum Priority{
+    Priority_Unknown = 0;
+    Priority_Low = 1;
+    Priority_Mid = 2;
+    Priority_High = 3;
+  }
+
+  message Parameter{
+    optional OrderFlow order_flow = 1;
+    optional DriverFiltering driver_filtering = 2;
+    optional MatchAssessment match_assessment = 3;
+    optional ETA eta = 4;
+    optional ShippingFee shipping_fee = 5;
+    optional BuyerShippingFee buyer_shipping_fee = 6;
+    optional DriverShippingFee driver_shipping_fee = 7;
+    optional ServiceFee service_fee = 8;
+    optional DFFSetting dff_setting = 9;
+    optional InsuranceFee insurance_fee = 11;
+    optional InstantShopeeShippingFee instant_shopee_shipping_fee = 12;
+    optional InstantDeliveryShippingFee instant_delivery_shipping_fee = 13;
+    optional SmallOrderFee small_order_fee = 14;
+    optional NonPartnerFee non_partner_fee = 15;
+    optional WorkingHours working_hours = 16;
+  }
+
+  message OrderFlow{
+    optional uint32 min_completion_rate = 1; // 乘1w后保存, 1%=0.01, 0.01*1w=100
+  }
+
+  message DriverFiltering{
+    optional uint64 max_merchant_distance = 1; // 单位m
+    optional int64 min_balance = 2; // 乘10w后保存
+    optional int64 max_allowed_negative_balance = 3; // 乘10w后保存
+    optional uint64 assign_same_buyer_interval = 4; // 单位ms
+  }
+
+  message MatchAssessment{
+    optional uint64 merchant_distance_weight = 1; // 乘100后保存
+    optional uint64 auto_acceptance_weight = 2; // 乘100后保存
+    optional uint64 completion_rate_weight = 3; // 乘100后保存
+  }
+
+  message ETA{
+    optional Base checkout_page = 1;
+    optional Base store_listing = 2;
+
+    message Base{
+      optional uint64 fixed_time = 1; // 单位ms
+      optional uint64 driver_speed = 2; // 单位m/min
+    }
+  }
+
+  message ShippingFee{
+    optional uint64 min_shipping_fee = 1; // 乘10w后保存
+    optional uint64 fare = 2; // 乘10w后保存
+    optional uint64 commission_rate = 3; // 乘1w后保存, 20%=0.2, 0.2*1w=2000
+  }
+
+  // Tier 配送距离区间，区间左开右必，第一个区间必须以0开始，区间必须是连续的；0 < 区间总数 <= 10
+  message ShippingFeeTier {
+    optional uint64 tier_start = 1;  // 单位：m
+    optional uint64 tier_end = 2;   // 单位：m
+    optional uint64 fixed_fee = 3;  // 乘10w后保存
+    optional uint64 fare = 4;       // 乘10w后保存
+  }
+
+  message BaseShippingFee {
+    optional uint64 min_shipping_fee = 1; // 乘10w后保存
+    repeated ShippingFeeTier tiers = 2;
+  }
+
+  // 非TH地区由于不区分partner，这里让非TH地区的partner_shipping_fee和non_partner_shipping_fee 配置相同参数
+  message BuyerShippingFee {
+    optional BaseShippingFee partner_shipping_fee = 1;
+    optional BaseShippingFee non_partner_shipping_fee = 2; //兜底使用non-partner
+  }
+  message DriverShippingFee {
+    optional BaseShippingFee shipping_fee = 1;
+    optional uint64 commission_rate = 2; // 乘1w后保存, 20%=0.2, 0.2*1w=2000
+  }
+
+  message ServiceFee{
+    repeated ServiceFeeInterval normal_intervals = 1;
+    repeated ServiceFeeInterval listed_intervals = 2;
+    optional uint64 ValidTime = 3;
+  }
+  message ServiceFeeInterval {
+    optional float commission_rang_end = 1;
+    optional uint64 service_fee = 2;
+  }
+
+  message InsuranceTier {
+    optional string name = 1;
+    optional uint64 insurance_premium = 2;   // 乘10w后保存
+    optional uint64 sum_assured = 3;  // 乘10w后保存
+  }
+  message InsuranceFee {
+    repeated InsuranceTier tiers = 1;
+  }
+  message DFFSetting {
+    enum DFFSettingMode {
+      DFF_ONLY = 1;
+      APPLY_BY_ALGO = 2;
+      MFF_ONLY = 3;
+    }
+    optional DFFSettingMode mode = 1;
+  }
+  message InstantShopeeShippingFee {
+    optional uint64 base_shipping_fee = 1;
+  }
+  message InstantDeliveryShippingFee {
+    optional uint64 base_shipping_fee = 1;
+  }
+  message SmallOrderFee{
+    optional uint64 min_spend = 1;
+    optional uint64 small_order_fee = 2;
+  }
+  message NonPartnerFee{
+    optional uint64 non_partner_fee = 1;
+  }
+  message WorkingHours {
+    optional uint32 start_time = 1;
+    optional uint32 end_time = 2;
+  }
+}
+
+enum ContentRuleLogic {
+  RULE_LOGIC_OR = 1;
+  RULE_LOGIC_AND = 2;
+}
+
+message ContentRule {
+  // for store listing
+  repeated foody_base.PartnerType partner_types = 1;
+  optional float rating_score_min = 2;
+  optional float rating_score_max = 3;
+  repeated uint64 store_tags = 4;
+  repeated foody_base.StoreCategory store_categories = 5;
+  optional ContentRuleLogic store_tags_logic = 6;
+  optional ContentRuleLogic store_categories_logic = 7;
+  // for item listing
+  repeated uint64 dish_tags = 8;
+  optional ContentRuleLogic dish_tags_logic = 9;
+}
+
+message Overlay {
+  enum TagsLogic{
+    TAGS_LOGIC_AND = 1;
+    TAGS_LOGIC_OR = 2;
+  }
+  enum Status{
+    STATUS_DISABLED = 1;
+    STATUS_ENABLED = 2;
+  }
+  enum ShowStatus {
+    ONGOING = 1;
+    UPCOMING = 2;
+    DISABLED = 3;
+    PAST = 4;
+  }
+
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional string logo_image = 3;
+  optional string banner_image = 4;
+  optional uint32 priority = 5;
+  repeated uint64 store_tag_ids = 6;
+  optional TagsLogic tags_logic = 7;
+  optional Status status = 8;
+  optional uint64 effective_time = 9;
+  optional uint64 expire_time = 10;
+  optional string creator = 11;
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional ShowStatus show_status = 14;
+}
+
+message TimeRange {
+  optional uint64 start_time = 1;
+  optional uint64 end_time = 2;
+}
+
+enum SellerAuthority {
+  EDIT_MENU = 1;
+  EDIT_PROMOTION = 2;
+}
+// ==================商户钱包start=====================
+
+message MerchantWalletAdjustmentOrder {
+  enum AdjustmentStatus {
+    INITED = 1;
+    APPROVED = 2;
+    COMPLETED = 3;
+    FAILED = 4;
+    EXCEPTION = 5;
+  }
+
+  enum AmountType {
+    CREDIT = 1;
+    DEBIT = 2;
+  }
+
+  enum AuditResult {
+    UNKNOWN = 0;
+    APPROVE = 1;
+    REJECT = 2;
+  }
+
+  enum RejectReason {
+    DEFAULT = 0;
+  }
+
+  optional uint64 id = 1;
+  optional AdjustmentStatus adjustment_status = 2;
+
+  optional uint64 settlement_detail_id = 3;
+  optional uint64 store_id = 4;
+  optional uint64 merchant_id = 5;
+  optional uint64 wallet_id = 6;
+  optional MerchantWalletType wallet_type = 7;
+
+  optional uint64 amount = 8;
+  optional AmountType amount_type = 9;
+
+  optional uint64 initial_time = 10;
+  optional uint64 approved_time = 11;
+  optional uint64 complete_time = 12;
+  optional uint64 failed_time = 13;
+
+  optional string remark = 14;
+  optional string auditor = 15;
+  optional AuditResult audit_result = 16;
+  optional RejectReason reject_reason = 17;
+
+  optional string creator = 18;
+  optional uint64 create_time = 19;
+  optional uint64 update_time = 20;
+
+  optional uint64 reference_id = 21;
+  optional string reason = 22;
+  optional string audit_remark = 23;
+}
+
+enum MerchantWalletType {
+  UNKNOWN_WALLET = 0;
+  MERCHANT_WALLET = 1;
+  STORE_WALLET = 2;
+}
+
+message WalletSettlementOrder{
+  enum SettlementStatus {
+    INITED = 1;
+    PROCESSING = 2;
+    EXCEPTION = 3;
+    COMPLETED = 4;
+    FAILED = 5;
+  }
+
+
+  optional uint64 id = 1;
+  optional SettlementStatus settlement_status = 2;
+  optional MerchantWalletType wallet_type = 3;
+
+  //关联
+  optional uint64 wallet_withdraw_order_id = 4;
+  optional uint64 wallet_txn_id = 5;
+  optional uint64 store_id = 6;
+  optional uint64 merchant_id = 7;
+  optional uint64 wallet_id = 8;
+
+  optional uint32 closing_date = 11;//结算日期
+
+  optional uint64 create_time = 12;
+  optional uint64 update_time = 13;
+  optional uint64 initial_time = 14;
+  optional uint64 processing_time = 15;
+  optional uint64 completed_time = 16;
+  optional uint64 failed_time = 17;
+
+  optional int64 last_error_code = 18;
+
+  //费用
+  message Amount {
+    optional uint64 amount = 1;
+    optional uint64 fee_amount = 2;
+    optional uint64 wht_amount = 3; //th 特有
+    optional uint64 pre_deduction_amount = 4; //th 特有 预先扣减的金额  仅限人工调整减使用
+  }
+  optional Amount amount = 20;
+  message Flag {
+    optional bool is_settlement_combined = 1;
+  }
+  optional Flag flag = 21;
+  message StoreShardList {
+    repeated uint32 shard = 1;
+  }
+  optional StoreShardList store_shard_list = 22;//明细分布的表id json list
+}
+
+message MerchantWalletWithdrawOrder {
+  enum WithdrawStatus {
+    INITED = 1;
+    PROCESSING = 2;
+    EXCEPTION = 3;
+    COMPLETED = 4;
+    FAILED = 5;
+  }
+
+  enum PaymentMethod {
+    BANK = 1;
+    WALLET = 2;
+  }
+
+  enum PayoutMode {
+    UNKOWN = 0;
+    AUTO = 1;
+    MANUAL = 2;
+  }
+
+  optional uint64 id = 1;
+  optional WithdrawStatus withdraw_status = 2;
+  optional MerchantWalletType wallet_type = 3;       // 钱包类型
+
+  optional uint64 wallet_txn_id = 4;
+  optional uint64 store_id = 5;
+  optional uint64 merchant_id = 6;
+  optional uint64 wallet_id = 7;
+
+  optional int64 amount = 8;
+  optional PaymentMethod payment_method = 9;
+  optional uint64 actual_payout_amount = 10;
+
+  optional uint64 create_time = 11;
+  optional uint64 processing_time = 12;
+  optional uint64 update_time = 13;
+  optional uint64 completed_time = 14;
+  optional uint64 failed_time = 15;
+
+  optional int64 last_error_code = 16;
+
+  optional PayoutMode payout_mode = 17;
+  optional string bank_name = 18;
+  optional uint64 bank_id = 19;
+  optional string bank_account_no = 20;
+  optional string bank_account_name = 21;
+  optional string transaction_ref = 22;
+  optional string remark = 23;
+  optional string wallet_txn_sn = 24;
+}
+
+message ExpressContent {
+  enum CollectFrom {
+    FROM_NONE = 0;
+    FROM_SENDER = 1;
+    FROM_RECIPIENT = 2;
+  }
+
+  enum PayTo {
+    TO_NONE = 0;
+    TO_MERCHANT = 1;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  optional ServiceType service_type = 3;
+  optional ExpressStatus express_status = 4;
+
+  optional CollectFrom collect_from = 5;
+  optional uint64 collect_amount = 6;
+  optional PayTo pay_to = 7;
+  optional uint64 pay_amount = 8;
+  optional uint64 deposit_amount = 9;
+
+  optional string timezone = 10;
+  optional uint64 flag = 11;
+
+  optional CancelSource cancel_source = 12;
+  optional Proposer cancel_proposer = 13;
+  optional SPXCancelReason cancel_reason = 14;
+  repeated Certificate cancel_certs = 15;
+  optional string cancel_remark = 16;
+
+  optional uint64 create_time = 17;
+  optional uint64 assign_time = 18;
+  optional uint64 arrive_time = 19;
+  optional uint64 pickup_time = 20;
+  optional uint64 complete_time = 21;
+  optional uint64 return_time = 22;
+  optional uint64 cancel_time = 23;
+  optional uint64 update_time = 24;
+
+  optional uint64 estimate_pickup_duration = 25;
+  optional uint64 estimate_delivery_duration = 26;
+}
+
+message ExpressDelivery {
+  message GeoTracking {
+    optional Geo arrive_geo = 1;
+    optional Geo pickup_geo = 2;
+    optional Geo complete_geo = 3;
+    optional Geo accept_geo = 4;
+  }
+
+  enum OnHoldFlag {
+    DEFAULT = 0;
+    ON_HOLD = 1;
+  }
+
+  enum DeliveryType {
+    UNKNOWN = 0;
+    BUYER = 1;
+    OTHERS = 2;
+  }
+
+  enum CompleteReason {
+    DELIVERED_DEFAULT = 0;
+    DELIVERED_VEHICLE_BROKE = 1;
+    DELIVERED_TRAFFIC_ACCIDENT = 2;
+    DELIVERED_VICTIM_OF_CRIME = 3;
+    DELIVERED_VICTIM_OF_RIOT = 4;
+    DELIVERED_VICTIM_OF_NATURAL_DISASTER = 5;
+    DELIVERED_OTHERS = 6;
+  }
+
+  enum ReturnReason {
+    RETURNED_DEFAULT = 0;
+    RETURNED_VEHICLE_BROKE = 1;
+    RETURNED_TRAFFIC_ACCIDENT = 2;
+    RETURNED_VICTIM_OF_CRIME = 3;
+    RETURNED_VICTIM_OF_RIOT = 4;
+    RETURNED_VICTIM_OF_NATURAL_DISASTER = 5;
+    RETURNED_OTHERS = 6;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 package_id = 2;
+  optional uint64 express_id = 3;
+  optional uint64 driver_id = 4;
+
+  optional ServiceType service_type = 5;
+  optional ExpressDeliveryStatus delivery_status = 6;
+
+  optional string pickup_name = 8;
+  repeated Certificate pickup_certs = 9;
+  optional string pickup_remark = 10;
+
+  optional string delivery_name = 12;
+  optional DeliveryType delivery_type = 13;
+  repeated Certificate delivery_certs = 14;
+  optional string delivery_remark = 15;
+  optional CompleteReason delivery_reason = 17;
+
+  optional string return_name = 20;
+  repeated Certificate return_certs = 21;
+  optional string return_remark = 22;
+  optional ReturnReason return_reason = 24;
+
+  optional uint64 shipping_surge_fee = 25;
+  optional uint64 shipping_income = 26;
+
+  optional string timezone = 27;
+  optional OnHoldFlag onhold_flag = 28;
+
+  optional Proposer cancel_proposer = 29;
+  optional CancelSource cancel_source = 30;
+  optional SPXCancelReason cancel_reason = 31;
+
+  optional uint64 create_time = 32;
+  optional uint64 arrive_time = 33;
+  optional uint64 pickup_time = 34;
+  optional uint64 complete_time = 35;
+  optional uint64 return_deadline = 36;
+  optional uint64 return_time = 37;
+  optional uint64 cancel_time = 38;
+  optional uint64 update_time = 39;
+  optional GeoTracking geo_tracking = 40;
+}
+
+message ExpressPackage {
+  optional uint64 id = 1;
+  optional uint64 express_id = 2;
+  optional ServiceType service_type = 3;
+  optional PackageCategory category = 4;
+  optional ExpressPackageStatus package_status = 5;
+
+  optional DeliveryAddress pickup_address = 6;
+  optional DeliveryAddress delivery_address = 7;
+  optional uint64 delivery_distance = 8;
+
+  optional uint32 weight = 9;
+  optional uint32 length = 10;
+  optional uint32 width = 11;
+  optional uint32 height = 12;
+
+  optional string remark = 13;
+
+  optional uint64 create_time = 14;
+  optional uint64 complete_time = 15;
+  optional uint64 return_time = 16;
+  optional uint64 cancel_time = 17;
+  optional uint64 update_time = 18;
+}
+
+message ExpressAssignment {
+  enum DepositStatus {
+    DEPOSIT_DEFAULT = 0;
+    DEPOSIT_INITED = 1;
+    DEPOSIT_DEPOSITED = 2;
+    DEPOSIT_REFUNDED = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 express_id = 2;
+  optional uint64 driver_id = 3;
+
+  optional ServiceType service_type = 4;
+  optional ExpressAssignmentStatus assignment_status = 5;
+
+  optional uint64 payment_id = 6;
+  optional uint64 deposit_amount = 7;
+  optional DepositStatus deposit_status = 8;
+
+  optional CancelSource cancel_source = 9;
+  optional SPXCancelReason cancel_reason = 10;
+  repeated Certificate cancel_certs = 11;
+  optional string cancel_remark = 12;
+
+  optional uint64 create_time = 13;
+  optional uint64 assign_time = 14;
+  optional uint64 complete_time = 15;
+  optional uint64 cancel_time = 16;
+  optional uint64 update_time = 17;
+
+  optional uint64 estimate_pickup_time = 18;
+
+  optional Proposer cancel_proposer = 100;
+}
+
+message ExpressDeliveryPackage {
+  optional ExpressPackage package = 1;
+  optional ExpressDelivery delivery = 2;
+}
+
+enum ExpressStatus {
+  EXPRESS_CREATED = 100;
+  EXPRESS_ASSIGNED = 200;
+  EXPRESS_ARRIVED = 300;
+  EXPRESS_PICKED_UP = 400;
+  EXPRESS_RETURNED = 500;
+  EXPRESS_COMPLETED = 600;
+  EXPRESS_CANCELED = 700;
+}
+
+enum ExpressAssignmentStatus {
+  EXPRESS_ASSIGNMENT_CREATED = 100;
+  EXPRESS_ASSIGNMENT_ASSIGNED = 200;
+  EXPRESS_ASSIGNMENT_COMPLETED = 300;
+  EXPRESS_ASSIGNMENT_CANCELED = 400;
+}
+
+enum ExpressDeliveryStatus {
+  EXPRESS_DELIVERY_CREATED = 100;
+  EXPRESS_DELIVERY_ARRIVED = 200;
+  EXPRESS_DELIVERY_PICKED_UP = 300;
+  EXPRESS_DELIVERY_RETURNING = 400;
+  EXPRESS_DELIVERY_RETURNED = 401;
+  EXPRESS_DELIVERY_COMPLETED = 500;
+  EXPRESS_DELIVERY_CANCELED = 600;
+}
+
+enum ExpressPackageStatus {
+  EXPRESS_PACKAGE_CREATED = 100;
+  EXPRESS_PACKAGE_RETURNED = 200;
+  EXPRESS_PACKAGE_COMPLETED = 300;
+  EXPRESS_PACKAGE_CANCELED = 400;
+}
+
+enum PackageCategory {
+  EXPRESS_PACKAGE_FILE = 1;
+  EXPRESS_PACKAGE_FOOD = 2;
+  EXPRESS_PACKAGE_CLOTHING = 3;
+  EXPRESS_PACKAGE_ELECTRONICS = 4;
+  EXPRESS_PACKAGE_MEDICAL = 5;
+  EXPRESS_PACKAGE_OTHERS = 6;
+}
+
+enum PayType {
+  COD_ON_SENDER = 1;
+  COD_ON_RECIPIENT = 2;
+}
+
+// TODO 在API接口校验所选的reason是否符合, 新增的reason需要注意是否会被校验条件过滤掉
+// 文档：https://docs.google.com/spreadsheets/d/1lymx1sfZpp69ZRgvve_yrN61IzSarygDX_JkrRmZer8/edit#gid=483702925
+enum SPXCancelReason{
+  SPX_RESERVED = 0;
+
+  SPX_ORDER_CANCEL_DEFAULT = 1;
+
+  SPX_OTHERS = 1000;
+  SPX_BAD_WEATHER = 1001;
+  SPX_DRIVER_ACCIDENTALLY_TOOK_ORDER = 1002;
+  SPX_DRIVER_VEHICLE_BROKEN_TO_SELLER = 1003;
+  SPX_DRIVER_COULD_NOT_FIND_SELLER = 1004;
+  SPX_DRIVER_REPORT_SELLER_CANNOT_CONTACT = 1005;
+  SPX_DRIVER_REPORT_SELLER_ASKED_TO_CANCEL = 1006;
+  SPX_PICK_UP_ADDRESS_IS_TOO_FAR = 1007;
+  SPX_PKG_TOO_BIG_TOO_HEAVY_TO_DELIVERY = 1008;
+  SPX_PKG_IS_NOT_WELL_PREPARED = 1009;
+  SPX_PROHIBITED_ITEM = 1010;
+  SPX_STORE_WAS_CLOSED = 1011;
+  SPX_CUSTOMER_CHANGE_PAYMENT_METHOD = 1012;
+  SPX_CUSTOMER_HAS_CHANGE_PLAN = 1013;
+  SPX_CUSTOMER_INPUT_WRONG_INFO = 1014;
+  SPX_CUSTOMER_FORGOT_USE_VOUCHER = 1015;
+  SPX_DRIVER_ASKED_CUSTOMER_TO_CANCEL = 1016;
+  SPX_CUSTOMER_CAN_NOT_CONTACT_DRIVER = 1017;
+  SPX_DRIVER_IS_TOO_FAR = 1018;
+  SPX_CUSTOMER_HAS_WAITED_TOO_LONG = 1019;
+  SPX_CUSTOMER_REGRET_AFTER_SUBMIT = 1020;
+  SPX_DRIVER_REJECT_MY_ITEM = 1021;
+  SPX_CAN_NOT_MATCH_DRIVER = 1022;
+  SPX_PAYMENT_FAILED = 1023;
+  SPX_SHOPEE_INDICATES_THIS_IS_FRAUD = 1024;
+  SPX_FAILED_TO_DECODE_LOGLAT = 1025;
+  SPX_LOST = 1026;
+  SPX_DAMAGE = 1027;
+  SPX_REACHED_DRIVER_DROPPING_LIMIT = 1028;
+  SPX_CANCELED_BY_UPSTREAM_SYSTEM = 1029;
+
+
+  SPX_DRIVER_VEHICLE_BROKEN = 2000;
+  SPX_INSISTS_CANCEL = 2001;
+  SPX_INSISTS_RETURN = 2002;
+  SPX_CUSTOMER_REPORT_RETURN_TOO_LONG = 2003;
+  SPX_DRIVER_IN_TRAFFIC_ACCIDENT = 2004;
+  SPX_DRIVER_BECOME_VICTIM_OF_CRIME = 2005;
+  SPX_RIOT = 2006;
+  SPX_NATURAL_DISASTER = 2007;
+  SPX_DRIVER_REPORT_ROAD_BLOCKED = 2008;
+  SPX_DRIVER_REPORT_CAN_NOT_FIND_RECIPIENT = 2009;
+  SPX_DRIVER_REPORT_RECIPIENT_REJECTED_ITEM = 2010;
+  SPX_INSISTS_TO_RETURN_ORDER = 2011;
+  SPX_RECIPIENT_REPORT_FAKE_ORDER = 2012;
+  SPX_ITEM_TAMPERED = 2013;
+  SPX_SENDER_NOT_ACCEPT_ITEM = 2014;
+  SPX_CUSTOMER_CANNOT_CONTACT = 2015;
+}
+
+enum SPXCancelOrderType {
+  SPX_EXPRESS_CANCEL_TYPE = 1;   // 发起取消express
+  SPX_EXCEPTION_AUDIT_TYPE = 2;  // 发起异常审核单
+}
+
+enum ExpressCompleteReason {
+  EXPRESS_DELIVERED_VEHICLE_BROKE = 1;
+  EXPRESS_DELIVERED_TRAFFIC_ACCIDENT = 2;
+  EXPRESS_DELIVERED_VICTIM_OF_CRIME = 3;
+  EXPRESS_DELIVERED_VICTIM_OF_RIOT = 4;
+  EXPRESS_DELIVERED_VICTIM_OF_NATURAL_DISASTER = 5;
+  EXPRESS_DELIVERED_OTHERS = 6;
+}
+
+enum ExpressReturnReason {
+  EXPRESS_RETURNED_VEHICLE_BROKE = 1;
+  EXPRESS_RETURNED_TRAFFIC_ACCIDENT = 2;
+  EXPRESS_RETURNED_VICTIM_OF_CRIME = 3;
+  EXPRESS_RETURNED_VICTIM_OF_RIOT = 4;
+  EXPRESS_RETURNED_VICTIM_OF_NATURAL_DISASTER = 5;
+  EXPRESS_RETURNED_OTHERS = 6;
+}
+
+message ExpressAuditOrder {
+  enum AuditType {
+    Canceled = 1; // 配送取消审核单
+    Returning = 2; // 配送退还审核单
+  }
+
+  enum OrderStatus {
+    CREATED = 1;
+    APPROVED = 2;
+    CANCELED = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 delivery_id = 2;
+  optional uint64 express_id = 3;
+  optional uint64 driver_id = 4;
+
+  optional ServiceType service_type = 5;
+  optional AuditType audit_type = 6;
+  optional OrderStatus order_status = 7;
+
+  optional Source source = 8;
+  optional SPXCancelReason reason = 9;
+  repeated Certificate certs = 10;
+  optional string remark = 11;
+
+  optional Proposer proposer = 12;
+  optional string creator = 13;
+
+  repeated Certificate audit_certs = 14;
+  optional string audit_remark = 15;
+  optional string auditor = 16;
+
+  optional CancelSource cancel_source = 17;
+  optional SPXCancelReason cancel_reason = 18;
+
+  optional uint64 create_time = 19;
+  optional uint64 approve_time = 20;
+  optional uint64 cancel_time = 21;
+  optional uint64 update_time = 22;
+}
+
+message Express {
+  optional ExpressContent content = 1;
+  repeated ExpressAssignment assignments = 2;
+  repeated ExpressDeliveryPackage delivery_packages = 3;
+}
+
+message SPXOrderContent {
+  enum OrderSource {
+    SOURCE_SPX_INSTANT_SHOPEE = 2;
+    SOURCE_SPX_INSTANT_DELIVERY = 3;
+  }
+  optional uint64 id = 1;
+  optional uint64 user_id = 2;
+  optional string reference_id = 3;
+  optional OrderSource order_source = 4;
+  optional ServiceType service_type = 5;
+  optional string remark = 6;
+
+  // 费用明细
+  optional uint64 platform_service_fee = 7;
+  optional uint64 shipping_base_fee = 8; // 这里表示的即是 SPX service fee
+  optional uint64 shipping_fee = 9;
+  optional uint64 insurance_fee = 10;
+  optional uint64 insurance_assured_amount = 11;
+  optional uint64 shipping_voucher_amount = 12;
+  optional uint64 coins_amount = 13;
+  optional PaymentMethod payment_method = 14;
+  optional uint64 total_amount = 15;
+
+  // 状态信息
+  optional SPXOrderStatus order_status = 16;
+  optional CancelSource cancel_source = 17;
+  optional CancelReason cancel_reason = 18;
+  optional Proposer cancel_proposer = 19;
+  optional SPXOrderShowStatus order_show_status = 20;
+  optional uint64 flag = 21;
+  repeated Certificate cancel_certs = 22;
+  optional string cancel_remark = 23;
+
+  // 时间戳
+  optional uint64 place_time = 24;
+  optional uint64 approve_time = 25;
+  optional uint64 payment_time = 26;
+  optional uint64 on_delivering_time = 27;
+  optional uint64 complete_time = 28;
+  optional uint64 delivery_complete_time = 29;
+  optional uint64 delivery_return_time = 30;
+  optional uint64 cancel_time = 31;
+  optional uint64 rating_completed_time = 32;
+  optional uint64 create_time = 33;
+  optional uint64 update_time = 34;
+
+  // eta
+  optional uint64 estimate_pickup_time = 35;
+  optional uint64 estimate_delivery_time = 36;
+
+  // shipping fee 3.0
+  optional uint64 shipping_fare_extra_fee = 37;
+  optional uint64 shipping_fare_discount_amount = 38;
+
+  // schedule order
+  optional bool is_schedule_order = 39;
+  optional uint64 schedule_pickup_time = 40;
+  optional uint64 start_assignment_time = 41;
+}
+
+message PackageInfo {
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  optional ServiceType service_type = 3;
+  optional PackageCategory category = 4;
+
+  // 配送信息
+  optional uint64 delivery_distance = 5;
+
+  // 费用明细
+  optional uint64 insurance_fee = 6;
+  optional uint64 insurance_assured_amount = 7;
+
+  optional DeliveryAddress pickup_address = 8;
+  optional DeliveryAddress delivery_address = 9;
+
+  optional uint32 weight = 10;
+  optional uint32 length = 11;
+  optional uint32 width = 12;
+  optional uint32 height = 13;
+
+  optional string remark = 14;
+
+  optional uint64 create_time = 16;
+  optional uint64 update_time = 17;
+  optional string category_name = 18;
+  optional string insurance_name = 19;
+}
+
+message SPXOrder {
+  message Flag {
+    optional uint32 is_returned = 1;
+    optional uint32 is_refunded = 2;
+  }
+
+  // the flag bit pos in db flag field
+  enum FlagBit {
+    IS_RETURNED = 0; // is_returned
+    IS_REFUNDED = 1; // is_refunded
+  }
+  optional SPXOrderContent content = 1;
+  repeated PackageInfo packages = 2;
+  optional Flag flag = 3;
+}
+
+message SPXPayment {
+  enum Type {
+    PLACE_ORDER = 1;
+    REWRITE_ORDER = 2;
+  }
+  optional uint64 id = 1;
+  optional uint64 user_id = 2;
+  optional uint64 order_id = 3;
+  optional ServiceType service_type = 4;
+
+  // 支付信息
+  optional uint64 transaction_ref = 5;
+  optional string payment_link = 6;
+  optional PaymentMethod payment_method = 7;
+  optional uint64 payment_channel_id = 8;
+  optional string payment_channel_option = 9;
+  optional uint64 total_amount = 10;
+  optional string currency = 11;
+  optional string region = 12;
+  optional PaymentStatus payment_status = 13;
+  optional Type payment_type = 14;
+  optional uint64 initiation_time = 15;
+  optional uint64 payment_time = 16;
+  optional uint64 create_time = 17;
+  optional uint64 update_time = 18;
+}
+
+message SPXReturnOrder {
+  enum ReturnType {
+    RETURN_TYPE_ORDER_CANCELLED = 1;  // order 取消产生的 return 单
+  }
+
+  enum RefundType {
+    REFUND_NONE = 1;
+    REFUND_FULL = 2;
+    REFUND_PART = 3; //Partial refund
+  }
+
+  enum ReturnStatus {
+    RETURN_CREATED = 1;
+    RETURN_APPROVED = 2;
+    RETURN_COMPLETED = 3;
+    RETURN_CANCELED = 4;
+  }
+
+  enum ReturnReason {
+    // 同SPX Order cancel reason
+    // https://docs.google.com/spreadsheets/d/1lymx1sfZpp69ZRgvve_yrN61IzSarygDX_JkrRmZer8/edit#gid=338141721
+    EXPRESS_OTHERS = 1000;
+    EXPRESS_BAD_WEATHER = 1001;
+    EXPRESS_DRIVER_ACCIDENTALLY_TOOK_ORDER = 1002;
+    EXPRESS_DRIVER_VEHICLE_BROKEN_TO_SELLER = 1003;
+    EXPRESS_DRIVER_COULD_NOT_FIND_SELLER = 1004;
+    EXPRESS_DRIVER_REPORT_SELLER_CANNOT_CONTACT = 1005;
+    EXPRESS_DRIVER_REPORT_SELLER_ASKED_TO_CANCEL = 1006;
+    EXPRESS_PICK_UP_ADDRESS_IS_TOO_FAR = 1007;
+    EXPRESS_PKG_TOO_BIG_TOO_HEAVY_TO_DELIVERY = 1008;
+    EXPRESS_PKG_IS_NOT_WELL_PREPARED = 1009;
+    EXPRESS_PROHIBITED_ITEM = 1010;
+    EXPRESS_STORE_WAS_CLOSED = 1011;
+    EXPRESS_CUSTOMER_CHANGE_PAYMENT_METHOD = 1012;
+    EXPRESS_CUSTOMER_HAS_CHANGE_PLAN = 1013;
+    EXPRESS_CUSTOMER_INPUT_WRONG_INFO = 1014;
+    EXPRESS_CUSTOMER_FORGOT_USE_VOUCHER = 1015;
+    EXPRESS_DRIVER_ASKED_CUSTOMER_TO_CANCEL = 1016;
+    EXPRESS_CUSTOMER_CAN_NOT_CONTACT_DRIVER = 1017;
+    EXPRESS_DRIVER_IS_TOO_FAR = 1018;
+    EXPRESS_CUSTOMER_HAS_WAITED_TOO_LONG = 1019;
+    EXPRESS_CUSTOMER_REGRET_AFTER_SUBMIT = 1020;
+    EXPRESS_DRIVER_REJECT_MY_ITEM = 1021;
+    EXPRESS_CAN_NOT_MATCH_DRIVER = 1022;
+    EXPRESS_PAYMENT_FAILED = 1023;
+    EXPRESS_SHOPEE_INDICATES_THIS_IS_FRAUD = 1024;
+    EXPRESS_FAILED_TO_DECODE_LOGLAT = 1025;
+    EXPRESS_LOST = 1026;
+    EXPRESS_DAMAGE = 1027;
+    EXPRESS_REACHED_DRIVER_DROPPING_LIMIT = 1028;
+    EXPRESS_CANCELED_BY_UPSTREAM_SYSTEM = 1029;
+
+
+    EXPRESS_DRIVER_VEHICLE_BROKEN = 2000;
+    EXPRESS_INSISTS_CANCEL = 2001;
+    EXPRESS_INSISTS_RETURN = 2002;
+    EXPRESS_CUSTOMER_REPORT_RETURN_TOO_LONG = 2003;
+    EXPRESS_DRIVER_IN_TRAFFIC_ACCIDENT = 2004;
+    EXPRESS_DRIVER_BECOME_VICTIM_OF_CRIME = 2005;
+    EXPRESS_RIOT = 2006;
+    EXPRESS_NATURAL_DISASTER = 2007;
+    EXPRESS_DRIVER_REPORT_ROAD_BLOCKED = 2008;
+    EXPRESS_DRIVER_REPORT_CAN_NOT_FIND_RECIPIENT = 2009;
+    EXPRESS_DRIVER_REPORT_RECIPIENT_REJECTED_ITEM = 2010;
+    EXPRESS_INSISTS_TO_RETURN_ORDER = 2011;
+    EXPRESS_RECIPIENT_REPORT_FAKE_ORDER = 2012;
+    EXPRESS_ITEM_TAMPERED = 2013;
+    EXPRESS_SENDER_NOT_ACCEPT_ITEM = 2014;
+    EXPRESS_CUSTOMER_CANNOT_CONTACT = 2015;
+  }
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  optional ServiceType service_type = 3;
+  optional ReturnType return_type = 4;
+  optional uint64 user_id = 5;
+  optional Responsibility responsibility = 6;
+  optional RefundType refund_type = 7;
+  optional uint64 refund_amount = 10;
+  optional uint64 store_chargeback_amount = 13;
+  optional ReturnStatus return_status = 11;
+  optional ReturnReason return_reason = 12;
+  optional string return_remark = 15;
+  optional Proposer proposer = 14; // return单的提出方
+  optional string creator = 16;
+  optional SPXRefund.RefundMethod offline_refund_method = 17;
+  optional StoreChargeBackType store_chargeback_type = 18;
+  optional StoreChargebackMethod store_chargeback_method = 19;
+  optional uint64 approve_time = 20;
+  optional uint64 complete_time = 21;
+  optional uint64 create_time = 22;
+  optional uint64 update_time = 23;
+}
+
+message SPXRefund {
+
+  enum RefundMethod {
+    REFUND_METHOD_DEFAULT = 0;
+    REFUND_METHOD_AUTO = 1[deprecated = true];// 改用RefundMode
+    REFUND_METHOD_MANUAL = 2[deprecated = true];// 改用RefundMode
+    REFUND_METHOD_SPM = 100;
+    REFUND_METHOD_WALLET_ADJUSTMENT = 200;
+    REFUND_METHOD_BANK_TRANSFER = 210;
+  }
+
+  enum RefundMode {
+    REFUND_MODE_AUTO = 1;
+    REFUND_MODE_MANUAL = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 return_id = 2;
+  optional uint64 order_id = 3;
+  optional uint64 checkout_id = 4;
+  optional uint64 user_id = 5;
+  optional ServiceType service_type = 6;
+  optional RefundMethod refund_method = 7;
+  optional uint64 payment_transaction_ref = 8;
+  optional uint64 refund_transaction_ref = 9;
+  optional string offline_refund_transaction_ref = 10;
+  optional uint64 refund_amount = 11;
+  optional RefundStatus refund_status = 12;
+  optional RefundMode refund_mode = 13;
+  optional string operator = 14;
+
+  optional uint64 refund_time = 15;
+  optional uint64 create_time = 16;
+  optional uint64 update_time = 17;
+  optional uint64 refund_coins = 18;
+}
+
+// SPX promotion
+enum UseStatus {
+  UNINITIALIZED = 0;
+  CREATED = 1;
+  CONFIRMED = 2;
+  COMPLETED = 3;
+  FAILED = 4;
+}
+
+message SPXVoucherRecord {
+  enum ReturnStatus {
+    RETURN_STATUS_UNINITIALIZED = 0;
+    RETURN_STATUS_CREATED = 1;
+    RETURN_STATUS_COMPLETED = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 voucher_id = 2;
+  optional string voucher_code = 3;
+  optional string transaction_id = 4;
+  optional uint64 order_id = 5;
+  optional uint64 user_id = 6;
+  optional string voucher_data = 7;
+  optional UseStatus use_status = 8;
+  optional ReturnStatus return_status = 9;
+  optional ServiceType service_type = 10;
+
+  optional uint64 CompleteTime = 11;
+  optional uint64 ReturnTime = 12;
+  optional uint64 CancelTime = 13;
+  optional uint64 CreateTime = 14;
+  optional uint64 UpdateTime = 15;
+  optional string anti_fraud = 16;
+}
+
+message SPXCoinRecord {
+  enum ReturnStatus {
+    RETURN_STATUS_UNINITIALIZED = 0;
+    RETURN_STATUS_CREATED = 1;
+    RETURN_STATUS_COMPLETED = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  optional uint64 user_id = 3;
+  optional string transaction_id = 4;
+  optional ServiceType service_type = 5;
+
+  // spend coin
+  optional int64 spend_amount = 6;
+  optional UseStatus spend_status = 7;
+  optional uint64 spend_time = 8;
+
+  //earn coin
+  optional int64 earn_total = 9;
+  optional int64 earn_order_amount = 10;
+  optional int64 earn_voucher_amount = 11;
+  optional UseStatus earn_status = 12;
+  optional uint64 earn_time = 13;
+
+  optional ReturnStatus return_status = 14;
+  optional uint64 return_time = 15;
+  optional uint64 create_time = 16;
+  optional uint64 update_time = 17;
+
+}
+
+enum SPXOrderTracingStatus {
+  SPX_ORDER_TRACING_EXPRESS_CREATED = 100;
+  SPX_ORDER_TRACING_ASSIGNED = 200;
+  SPX_ORDER_TRACING_PICKED_UP = 300;
+  SPX_ORDER_TRACING_DELIVERY_ON_HOLD = 310;
+  SPX_ORDER_TRACING_RETURNING = 320;
+  SPX_ORDER_TRACING_RETURNED = 500;
+  SPX_ORDER_TRACING_COMPLETED = 600;
+  SPX_ORDER_TRACING_CANCELED = 700;
+}
+
+
+// ==================flash sale start=====================
+
+message FlashSaleCampaign {
+  optional uint64 id = 1;
+  optional string campaign_name = 2;
+  repeated uint64 area_ids = 3;
+  optional string operator = 4;
+  optional uint64 create_time = 5;
+  optional uint64 update_time = 6;
+}
+
+
+message FlashSaleAreaTimeslotBinding {
+  optional uint64 id = 1;
+  optional uint64 area_id = 2;
+  optional uint64 timeslot_id = 3;
+  optional uint64 start_time = 4;
+  optional uint64 end_time = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+}
+
+message FlashSaleTimeslot {
+  optional uint64 id = 1;
+  optional uint64 campaign_id = 2;
+  optional uint64 start_time = 3;
+  optional uint64 end_time = 4;
+  optional string banner = 5;
+  optional string operator = 6;
+  optional uint64 create_time = 7;
+  optional uint64 update_time = 8;
+}
+
+message FlashSaleCampaignContent {
+  optional foody_base.FlashSaleCampaign falsh_sale_campaign = 1;
+  repeated foody_base.FlashSaleTimeslot timeslots = 2;
+}
+
+
+message FlashSaleStore {
+  optional uint64 id = 1;
+  optional uint64 timeslot_id = 2;
+  optional uint64 merchant_id = 3;
+  optional uint64 store_id = 4;
+  optional string store_name = 5;
+  optional uint32 dish_num = 6;
+  optional string operator = 7;
+  optional uint64 create_time = 8;
+  optional uint64 update_time = 9;
+}
+
+enum FlashSaleDishStatus {
+  Active = 1;
+  Inactive = 2;
+  Completed = 3;
+}
+
+message FlashSaleDishDiscount {
+  enum DishDiscountType {
+    DISCOUNT_PRICE = 1;
+    DISCOUNT_PERCENTAGE = 2;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 timeslot_id = 2;
+  optional uint64 store_id = 3;
+  optional uint64 dish_id = 4;
+  optional string dish_name = 5;
+  optional string flash_sale_dish_name = 6;
+  optional uint64 stock = 7;
+  optional uint64 sold_num = 8;
+  optional uint64 limit_per_user = 9;
+  optional uint64 discount_price = 10;
+  optional FlashSaleDishStatus discount_status = 11;
+  optional DishDiscountType discount_type = 12;
+  optional uint64 discount_percentage = 13;
+  optional string operator = 14;
+  optional uint64 create_time = 15;
+  optional uint64 update_time = 16;
+}
+
+message FlashSaleDishSoldRecord {
+  enum RecordSoldStatus {
+    INIT = 1;
+    ORDER_CREATED = 2;
+    FAILED = 3;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 order_id = 2;
+  optional uint64 buyer_id = 3;
+  optional uint64 discount_id = 4;
+  optional uint64 timeslot_id = 5;
+  optional uint64 store_id = 6;
+  optional uint64 dish_id = 7;
+  optional uint64 discount_price = 8;
+  optional RecordSoldStatus sold_status = 9;
+  optional uint32 quantity = 10;
+  optional uint32 return_quantity = 11;
+  optional uint32 cancel_quantity = 12;
+  optional uint64 return_time = 13;
+  optional uint64 cancel_time = 14;
+  optional uint64 create_time = 15;
+  optional uint64 update_time = 16;
+}
+
+
+message FlashSaleDish {
+  optional Dish dish = 1;
+  optional FlashSaleDishDiscount discount = 2;
+}
+
+message FlashSaleCartItemDetail {
+  optional uint64 user_limit = 1;         // 该秒杀菜品最多还可购买数量
+  optional foody_base.FlashSaleDishDiscount discount = 2;
+  optional foody_base.FlashSaleTimeslot timeslot = 3;
+}
+
+
+message FlashSaleOrderItemDetail {
+  optional uint64 discount_id = 1;
+  optional uint64 timeslot_id = 2;
+  optional uint64 dish_id = 3;
+  optional uint64 dish_price = 4;             // 菜品原价
+  optional uint64 discount_price = 5;         // 菜品秒杀价
+  optional uint64 quantity = 6;               // 数量
+}
+
+message FlashSaleOrderItem {
+  optional uint64 buyer_id = 1;
+  optional uint64 store_id = 2;
+  optional uint64 order_id = 4;
+  repeated FlashSaleOrderItemDetail flash_sale_dish_detail = 5;
+}
+
+message FlashSaleDishDiscountTimeslot {
+  optional FlashSaleDishDiscount discount = 1;
+  optional uint64 start_time = 2; // timeslot开始时间
+  optional uint64 end_time = 3;   // timeslot结束时间
+  optional uint64 campaign_id = 4; // 活动的id
+  optional string timezone = 5;   // 活动的时区
+}
+
+message DriverDeliveryOrder {
+  enum LocationType {
+    PICKUP_LOCATION = 1;
+    DELIVERY_LOCATION = 2;
+  }
+
+  message ShippingFeeItems {
+    optional uint64 shipping_surge_fee = 1;
+    optional uint64 shipping_base_fee = 2;
+  }
+
+  message Route {
+    optional LocationType location_type = 1;
+    optional uint64 delivery_order_id = 2;
+    optional uint64 order_id = 3;
+    optional float latitude = 4;
+    optional float longitude = 5;
+    optional uint64 distance = 6;
+  }
+
+  optional uint64 id = 1;
+  optional uint64 driver_id = 2;
+  optional DriverDeliveryStatus driver_delivery_order_status = 3;
+  optional uint64 shipping_fee_total = 4;
+  optional ShippingFeeItems shipping_fee_items = 5;
+  optional uint64 delivery_distance = 6;
+
+  optional uint32 total_num = 7;
+  optional uint32 completed_num = 8;
+  optional uint32 canceled_num = 9;
+
+  repeated Route routes = 10;
+
+  optional uint64 assign_time = 11;
+  optional uint64 complete_time = 12;
+  optional uint64 cancel_time = 13;
+  optional uint64 create_time = 14;
+  optional uint64 update_time = 15;
+}
+
+enum SettleTo {
+  SETTLE_TO_UNKNOWN = 0;
+  SETTLE_TO_MERCHANT = 1;
+  SETTLE_TO_STORE = 2;
+  SETTLE_TO_MERCHANT_HOST = 3;
+}
+
+message StoreSettlementMart {
+  enum WalletStatus {// 钱包状态
+    WALLET_DISABLE = 0;  // 0-未启用
+    WALLET_ENABLE = 1;   // 1-已使用
+  }
+  optional uint64 store_id = 1;
+  optional WalletStatus is_use_wallet = 2; // 是否使用钱包, 0-不使用, 1-使用
+  optional string bank_name = 3;
+  optional string bank_account_no = 4;
+  optional string bank_branch = 5;
+  optional string bank_account_name = 6;
+  optional uint64 wallet_id = 7;
+  optional SettlementMethod settlement_method = 9;
+  optional PaymentWay payment_way = 10;
+  optional Vat vat = 11;
+  optional Wht wht = 13;
+  optional SettleTo settle_to = 14;
+  optional uint64 bank_channel_id = 15;
+  optional PayoutMethod payout_method = 16;
+  optional CrossMonthSettlement cross_month_settlement = 17;
+  optional uint64 payout_account_id = 18;
+  optional string auto_payout_remark = 19;
+  optional string settlement_emails = 20;
+  optional uint64 bank_branch_id = 21;
+  enum ConfigStatus {
+    ConfigStatus_Unknown = 0;
+    ConfigStatus_Active = 1;
+    ConfigStatus_Inactive = 2;
+  }
+  optional ConfigStatus wallet_relation_status = 22;
+  optional ConfigStatus settlement_config_status = 23;
+  optional ConfigStatus product_config_status = 24;
+  optional BankAccountStatus bank_account_status = 25;
+}
+
+message MerchantSettlementMart {
+  enum WalletStatus {// 钱包状态
+    WALLET_DISABLE = 0;  // 0-未启用
+    WALLET_ENABLE = 1;   // 1-已使用
+  }
+  optional uint64 merchant_id = 1;
+  optional WalletStatus is_use_wallet = 2; // 是否使用钱包, 0-不使用, 1-使用
+  optional string bank_name = 3;
+  optional string bank_account_no = 4;
+  optional string bank_branch = 5;
+  optional string bank_account_name = 6;
+  optional uint64 wallet_id = 7;
+  optional SettlementMethod settlement_method = 9;
+  optional PaymentWay payment_way = 10;
+  optional Vat vat = 11;
+  optional Wht wht = 13;
+  optional uint64 bank_channel_id = 14;
+  optional PayoutMethod payout_method = 15;
+  optional CrossMonthSettlement cross_month_settlement = 16;
+  optional uint64 payout_account_id = 17;
+  optional string auto_payout_remark = 18;
+  optional string settlement_emails = 19;
+  optional uint64 bank_branch_id = 20;
+  enum ConfigStatus {
+    ConfigStatus_Unknown = 0;
+    ConfigStatus_Active = 1;
+    ConfigStatus_Inactive = 2;
+  }
+  optional ConfigStatus wallet_relation_status = 21;
+  optional ConfigStatus settlement_config_status = 22;
+  optional ConfigStatus product_config_status = 23;
+  optional BankAccountStatus bank_account_status = 24;
+}
+
+message ItemDiscountCampaignEnableTime {
+  optional uint64 start_time = 1;
+  optional uint64 end_time = 2;
+}
+
+message ItemDiscountCampaignEnableDate {
+  optional uint64 start_date = 1;
+  optional uint64 end_date = 2;
+}
+
+message ItemDiscountCampaignApplyDate {
+  optional ItemDiscountCampaignEnableDate allow_date = 1;
+  repeated ItemDiscountCampaignEnableTime allow_times = 2;
+}
+
+message ItemDiscountCampaignAppliedTimes {
+  repeated ItemDiscountCampaignApplyDate apply_dates = 1;
+}
+
+enum ItemDiscountCampaignGoingStatus {
+  ONGOING = 0; //活动未结束且在进行时间
+  UPCOMING = 1; //活动未结束但不在进行时间
+  EXPIRED = 2; //活动已结束
+}
+
+message RecruitmentSessionMaterialTemplate {
+   enum BizType {
+    VOUCHER = 1;
+    VOUCHER_PACKAGE = 2;
+  }
+
+  enum Status{
+    INIT = 1; //未绑定
+    SUCCESS =2;//绑定成功
+    FAIL =3; //绑定失败
+  }
+
+  optional uint64 id = 1;
+  optional uint64 session_id = 2;
+  optional string child_ids = 3;
+  optional string name = 4;
+  optional string template_value = 5;
+  optional BizType biz_type = 6;
+  optional uint64 biz_id =7;
+  optional string error = 8;
+  optional Status status = 9;
+  optional int32  is_deleted = 10;
+  optional uint64 create_time = 11;
+  optional uint64 update_time = 12;
+}
+
+enum StoreSessionStatus{
+   INVITED =1;
+   UNINVITED=2;
+   JOINED =3;
+   TERMINATED =4;
+   WITHDRAWN =5;
+}
+
+enum SessionTermsStatus{
+  UNREAD = 0;
+  ACCEPTED = 1;
+  REJECT = 2;
+}
+
+message RecruitmentSessionMerchant {
+  optional uint64 id = 1;
+  optional uint64 session_id = 2;
+  optional uint64 store_id = 3;
+  optional StoreSessionStatus status = 4;
+  optional string operator = 5;
+  optional uint64 create_time = 6;
+  optional uint64 update_time = 7;
+  optional SessionTermsStatus terms_status = 8;
+}
+
+enum MaterialType{
+     STORE = 1;
+}
+
+message RecruitmentSessionRegistration {
+
+    enum RegistrationStatus{
+        INVITED = 0;
+        JOINED =1;
+        TERMINATED =2;
+        WITHDRAWN =3;
+    }
+
+    enum RegistrationSource{
+        MERCHANT = 1;
+        ADMIN = 2;
+    }
+
+    enum BindStatus{
+        INIT = 0; // 未绑定
+        SUCCESS = 1;
+        FAIL = 2;
+    }
+
+    optional uint64 id = 1;
+    optional uint64 session_id = 2;
+    optional uint64 merchant_id = 3;
+    optional MaterialType material_type = 4;
+    optional uint64 material_id = 5;
+    optional uint64 optional_id = 6;
+    optional RegistrationStatus status =7;
+    optional string reason = 8;
+    optional RegistrationSource source = 9;
+    optional BindStatus bind_status = 10;
+    optional int32 is_deleted = 11;
+    optional uint64 register_time = 12;
+    optional uint64 create_time = 13;
+    optional uint64 update_time = 14;
+}
+
+
+message RecruitmentSessionMerchantExt {
+    optional RecruitmentSessionMerchant recruitment_session_merchant = 1;
+    optional uint64 optional_id = 2;
+    optional string optional_name = 3;
+    optional uint64 store_tag_id = 4;
+    optional string terminate_reason = 5;
+}
+
+message RecruitmentSessionPage {
+    message QuestionAndAnswer {
+      optional string question = 1;
+      optional string answer = 2;
+    }
+    optional uint64 id = 1;
+    optional uint64 session_id = 2;
+    optional string why_join = 3;
+    repeated QuestionAndAnswer faqs = 4;
+    optional string content = 5;
+    optional uint64 create_time = 6;
+    optional uint64 update_time = 7;
+}
+
+message RecruitmentSession {
+  enum RecruitmentSessionType {
+    ITEM_DISCOUNT = 1;
+    FLASH_SALE = 2;
+    VOUCHER = 3;
+  }
+
+  enum RecruitmentSessionStatus {
+    UPCOMING = 1;
+    ONGOING = 2;
+    COMPLETED = 3;
+  }
+  optional uint64 id = 1;
+  optional string name = 2;
+  optional RecruitmentSessionType type = 3;
+  optional RecruitmentSessionStatus status = 4;
+  optional uint32 is_deleted = 5;
+  optional uint64 register_start_time = 6;
+  optional uint64 register_end_time = 7;
+  optional uint64 running_start_time = 8;
+  optional uint64 running_end_time = 9;
+  optional string unique_key = 10;
+  optional string main_banner = 11;
+  optional string promotion_list_image = 12;
+  optional string desc = 13;
+  optional string labels = 14;
+  optional string operator = 15;
+  optional uint64 create_time = 16;
+  optional uint64 update_time = 17;
+  optional RecruitmentSessionPage page = 18;
+  repeated RecruitmentSessionMaterialTemplate templates = 19;
+  optional string invited_store_file_Url = 20;
+  optional int32 band_status = 21;
+}
+
+message VoucherPackageTemplate {
+   optional string name = 1;
+   repeated string benefits = 2;
+   optional uint64 store_tag_id = 3;
+}
+
+message RecruitmentSessionTask {
+    enum TaskType {
+        INVITED_STORE_SAVE_CHECK = 1;
+        INVITED_STORE_BATCH_UPDATE = 2;
+    }
+    enum TaskStatus {
+        ONGOING = 1;
+        SUCCESS = 2;
+        FAIL = 3;
+        PARTFAIL = 4;
+    }
+    optional uint64 id = 1;
+    optional uint64 session_id = 2;
+    optional string task_name = 3;
+    optional TaskType task_type = 4;
+    optional TaskStatus status = 5;
+    optional string upload_file_url = 6;
+    optional string error_file_url = 7;
+    optional uint64 create_time = 8;
+    optional uint64 update_time = 9;
+}
+
+message RecruitmentSessionPromotionSummary {
+    optional uint64 store_id = 1;
+    optional uint64 campaign_id = 2;
+    optional string dt = 3;      // yyyy-mm-dd
+    optional uint64 used_voucher_orders = 4;
+    optional uint64 total_voucher_orders_revenue = 5;
+    optional uint64 all_orders = 6;
+    optional uint64 new_customers = 7;
+    optional uint64 subsidy = 8;
+    optional uint64 used_voucher_dishes = 9;
+    optional uint64 used_voucher_count = 10;
+}
+
+message RecruitmentVoucherPackageRegisterCount {
+    optional uint64 session_id = 1;
+    optional uint64 option_id = 2;
+    optional uint64 register_count = 3;
+}
+
+message RecruitmentSessionReport {
+    optional uint64 id = 1;
+    optional uint64 session_id = 2;
+    optional uint64 merchant_id = 3;
+    optional uint64 store_id = 4;
+    optional uint64 material_template_id = 5;
+    optional string report_url = 6;
+    optional uint32 report_status = 7;
+    optional string report_error = 8;
+    optional string md5 = 9;
+    optional uint64 create_time = 10;
+    optional uint64 update_time = 11;
+}
