@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -19,12 +20,14 @@ func main() {
 		//},
 	})
 	//
-	//cmd := redisCli.Set("1", 2, time.Minute*60)
-	//if cmd.Err() != nil {
-	//	fmt.Printf("Set failed, err: %v\n", cmd.Err())
-	//	return
-	//}
-	//fmt.Println(cmd.Val())
+	cmd := redisCli.Set("1", 2, time.Minute*60)
+	if cmd.Err() != nil {
+		fmt.Printf("Set failed, err: %v\n", cmd.Err())
+		return
+	}
+	fmt.Println(cmd.Val())
+
+	redisCli.Pipeline()
 
 	//redisCli.Ping()
 	cmd := redisCli.Info("replication")
@@ -35,5 +38,5 @@ func main() {
 
 	<-sigs
 
-	redis.NewClusterClient()
+	//redis.NewClusterClient()
 }

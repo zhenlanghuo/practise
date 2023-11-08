@@ -31,4 +31,7 @@ func main() {
 			log.Fatalln(err)
 		}
 	}
+
+	tx, _ := db.Begin()
+	tx.Commit()
 }

@@ -23,7 +23,7 @@ func TestClient(t *testing.T) {
 	addr := "localhost:50052"
 
 	// 连接grpc服务器
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithResolvers())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

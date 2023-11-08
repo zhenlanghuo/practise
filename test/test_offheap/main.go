@@ -2,15 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/shoenig/offheap"
+	"github.com/CodisLabs/codis/pkg/utils/unsafe2"
+	"github.com/spinlock/jemalloc-go"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
-	"time"
+	"reflect"
 	"unsafe"
 )
 
@@ -60,21 +57,41 @@ func main() {
 	//}
 	//fmt.Println(count)
 
-	m := test4()
-	defer runtime.KeepAlive(m)
+	//m, s := test4()
+	//defer runtime.KeepAlive(m)
+	//defer runtime.KeepAlive(s)
 
-	fmt.Println("=============================")
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	<-sigs
-	//time.Sleep(time.Second * )
-	fmt.Println("=============================")
+	//m := test5()
+	//defer runtime.KeepAlive(m)
+	//
+	//fmt.Println("=============================")
+	//sigs := make(chan os.Signal, 1)
+	//signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	//<-sigs
+	////time.Sleep(time.Second * )
+	//fmt.Println("=============================")
+	//
+	//for i := 0; i < 5; i++ {
+	//	start := time.Now()
+	//	runtime.GC()
+	//	fmt.Printf("GC took %s\n", time.Since(start))
+	//}
 
-	for i := 0; i < 2; i++ {
-		start := time.Now()
-		runtime.GC()
-		fmt.Printf("GC took %s\n", time.Since(start))
-	}
+	//p, err := New[Person]()
+	//if err != nil {
+	//	fmt.Println("err", err)
+	//	return
+	//}
+	//fmt.Println(p)
+	//p.Name = "dadsa111"
+	//fmt.Println(p)
+
+	a := "123"
+	bytes := []byte(a)
+	b := string(bytes)
+	fmt.Println((*reflect.StringHeader)(unsafe.Pointer(&a)).Data)
+	fmt.Println((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data)
+	fmt.Println((*reflect.StringHeader)(unsafe.Pointer(&b)).Data)
 }
 
 //func test1() bool {
@@ -200,11 +217,20 @@ func main() {
 
 func New[T any]() (r *T, err error) {
 	//fmt.Println("New size", unsafe.Sizeof(*r))
-	bytes, err := offheap.New(int64(unsafe.Sizeof(*r)))
-	if err != nil {
-		return
-	}
-	r = (*T)(unsafe.Pointer((*SliceHeader)(unsafe.Pointer(&bytes)).Data))
+	//bytes, err := offheap.New(int64(unsafe.Sizeof(*r)))
+	//n := int(unsafe.Sizeof(*r))
+
+	//bytes := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
+	//	Data: uintptr(jemalloc.Malloc(int(unsafe.Sizeof(*r)))), Len: n, Cap: n,
+	//}))
+	//
+	////fmt.Println(bytes, len(bytes))
+	//
+	//if err != nil {
+	//	return
+	//}
+	r = (*T)(jemalloc.Malloc(int(unsafe.Sizeof(*r))))
+
 	return
 }
 
@@ -212,7 +238,10 @@ func NewSlice[T any](len, cap int) (r []T, err error) {
 	slice := (*SliceHeader)(unsafe.Pointer(&r))
 	var t T
 	//fmt.Println("NewSlice size", unsafe.Sizeof(t))
-	bytes, err := offheap.New(int64(unsafe.Sizeof(t)) * int64(cap))
+	//bytes, err := offheap.New(int64(unsafe.Sizeof(t)) * int64(cap))
+
+	bytes := unsafe2.MakeOffheapSlice(int(unsafe.Sizeof(t)) * int(cap)).Buffer()
+
 	if err != nil {
 		return
 	}
@@ -222,16 +251,17 @@ func NewSlice[T any](len, cap int) (r []T, err error) {
 	return
 }
 
-func test4() map[int]*Person {
-	m := make(map[int]*Person)
-	for i := 0; i < 1e5; i++ {
+func test4() (map[int]int, []*Person) {
+	m := make(map[int]int)
+	slice := make([]*Person, 1e7)
+	for i := 0; i < 1e7; i++ {
 		//if i%1e3 == 0 {
 		//	fmt.Println(i)
 		//}
 		p, err := New[Person]()
 		if err != nil {
 			fmt.Println("err", err)
-			return nil
+			return nil, nil
 		}
 		//p.bytes, err = NewSlice[byte](10000, 10000)
 		//p.test, err = New[Test]()
@@ -241,21 +271,23 @@ func test4() map[int]*Person {
 		//}
 		//p.bytes = make([]byte, 1)
 		//p.Name = "aaa"
-		p.a = 1
-		//m[i] = p
+		p.a = i
+		m[i] = i
+		slice[i] = p
 	}
-	return m
+	return m, slice
 }
 
 func test5() map[int]*Person {
 	m := make(map[int]*Person)
-	for i := 0; i < 1e8; i++ {
+	for i := 0; i < 1e7; i++ {
 		//if i%1e3 == 0 {
 		//	fmt.Println(i)
 		//}
 		p := &Person{}
 		//p.bytes = make([]byte, 100)
 		//p.test = &Test{}
+		p.a = i
 		m[i] = p
 	}
 	return m

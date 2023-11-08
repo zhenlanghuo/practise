@@ -26,53 +26,53 @@ message HelloReply {
   optional string message = 1;
 }
 
-//message TestStruct {
-//  required int64 int_point_field = 1 [(gogoproto.nullable) = false];
-//  required float float_point_field = 2 [(gogoproto.nullable) = false];
-//  required Person person = 3;
-//  required int64  int_field = 4 [(gogoproto.nullable) = false];
-//  repeated int64 int_slice = 5 ;
-//  repeated Person persons = 6 ;
-//  required int64 i1 = 7 [(gogoproto.nullable) = false];
-//  required int64 i2 = 8 [(gogoproto.nullable) = false];
-//  required int64 i3 = 9 [(gogoproto.nullable) = false];
-//  required int64 i4 = 10 [(gogoproto.nullable) = false];
-//  required int64 i5 = 11 [(gogoproto.nullable) = false];
-//  required string s1 = 12 [(gogoproto.nullable) = false];
-//  required string s2 = 13 [(gogoproto.nullable) = false];
-//  required string s3 = 14 [(gogoproto.nullable) = false];
-//  required string s4 = 15 [(gogoproto.nullable) = false];
-//  required string s5 = 16 [(gogoproto.nullable) = false];
-//}
-//
-//message Person {
-//  required string name = 1 [(gogoproto.nullable) = false];
-//  required int64 age = 2 [(gogoproto.nullable) = false];
-//}
-
 message TestStruct {
-  required int64 int_point_field = 1 ;
-  required float float_point_field = 2 ;
+  required int64 int_point_field = 1 [(gogoproto.nullable) = false];
+  required float float_point_field = 2 [(gogoproto.nullable) = false];
   required Person person = 3;
-  required int64  int_field = 4 ;
+  required int64  int_field = 4 [(gogoproto.nullable) = false];
   repeated int64 int_slice = 5 ;
   repeated Person persons = 6 ;
-  required int64 i1 = 7 ;
-  required int64 i2 = 8 ;
-  required int64 i3 = 9 ;
-  required int64 i4 = 10 ;
-  required int64 i5 = 11 ;
-  required string s1 = 12 ;
-  required string s2 = 13 ;
-  required string s3 = 14 ;
-  required string s4 = 15 ;
-  required string s5 = 16 ;
+  required int64 i1 = 7 [(gogoproto.nullable) = false];
+  required int64 i2 = 8 [(gogoproto.nullable) = false];
+  required int64 i3 = 9 [(gogoproto.nullable) = false];
+  required int64 i4 = 10 [(gogoproto.nullable) = false];
+  required int64 i5 = 11 [(gogoproto.nullable) = false];
+  required string s1 = 12 [(gogoproto.nullable) = false];
+  required string s2 = 13 [(gogoproto.nullable) = false];
+  required string s3 = 14 [(gogoproto.nullable) = false];
+  required string s4 = 15 [(gogoproto.nullable) = false];
+  required string s5 = 16 [(gogoproto.nullable) = false];
 }
 
 message Person {
-  required string name = 1;
-  required int64 age = 2;
+  required string name = 1 [(gogoproto.nullable) = false];
+  required int64 age = 2 [(gogoproto.nullable) = false];
 }
+
+//message TestStruct {
+//  required int64 int_point_field = 1 ;
+//  required float float_point_field = 2 ;
+//  required Person person = 3;
+//  required int64  int_field = 4 ;
+//  repeated int64 int_slice = 5 ;
+//  repeated Person persons = 6 ;
+//  required int64 i1 = 7 ;
+//  required int64 i2 = 8 ;
+//  required int64 i3 = 9 ;
+//  required int64 i4 = 10 ;
+//  required int64 i5 = 11 ;
+//  required string s1 = 12 ;
+//  required string s2 = 13 ;
+//  required string s3 = 14 ;
+//  required string s4 = 15 ;
+//  required string s5 = 16 ;
+//}
+//
+//message Person {
+//  required string name = 1;
+//  required int64 age = 2;
+//}
 
 message GogoProtoBufA {
   required string name = 1 [(gogoproto.nullable) = false];
@@ -81,4 +81,5 @@ message GogoProtoBufA {
   required int32 siblings = 4 [(gogoproto.nullable) = false];
   required bool spouse = 5 [(gogoproto.nullable) = false];
   required double money = 6 [(gogoproto.nullable) = false];
+  map<string, string> attrs = 8;
 }

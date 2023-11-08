@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"reflect"
 	"strconv"
 	"unsafe"
@@ -294,46 +293,46 @@ func main() {
 
 	//var ts *TestStruct
 	//fmt.Printf("%v\n", ts.ToBytesSize())
-	num := 100
-	ts := &TestStruct{IntPointField: &num, Float32PointField: proto.Float32(1.98), Person: &Person{Name: "123", Age: 1}, IntSlice: []int{1, 2, 3}, Persons: []*Person{&Person{Name: "12345", Age: 2}}}
-	//ts := &TestStruct{Person: &Person{Name: "123", Age: 1}}
-	fmt.Printf("%v\n", ToBytesSize(ts))
-	fmt.Println(ts.String())
-
-	bytes, pointIndex := ts.ToBytes(nil)
-	fmt.Println(bytes)
-	fmt.Println(pointIndex)
-
-	newts := (*TestStruct)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data))
-	fmt.Println(ts.String())
-	fmt.Println(newts.String())
-
-	clone := make([]byte, len(bytes))
-	copy(clone, bytes)
-	startAddr := uint64((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data)
-	cloneStartAddr := uint64((*reflect.SliceHeader)(unsafe.Pointer(&clone)).Data)
-	for _, addr := range pointIndex {
-		delt := byteOrder.Uint64(bytes[int(addr-startAddr):int(addr-startAddr)+8]) - startAddr
-		byteOrder.PutUint64(clone[int(addr-startAddr):int(addr-startAddr)+8], cloneStartAddr+delt)
-	}
-
-	newts2 := (*TestStruct)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&clone)).Data))
-
-	fmt.Println(bytes)
-	fmt.Println(pointIndex)
-	fmt.Println(clone)
-
-	fmt.Println(ts.String())
-	fmt.Println(newts.String())
-	fmt.Println(newts2.String())
-
-	for i := 0; i < len(bytes); i++ {
-		bytes[i] = 0
-	}
-
-	fmt.Println(ts.String())
-	fmt.Println(newts.String())
-	fmt.Println(newts2.String())
+	//num := 100
+	//ts := &TestStruct{IntPointField: &num, Float32PointField: proto.Float32(1.98), Person: &Person{Name: "123", Age: 1}, IntSlice: []int{1, 2, 3}, Persons: []*Person{&Person{Name: "12345", Age: 2}}}
+	////ts := &TestStruct{Person: &Person{Name: "123", Age: 1}}
+	//fmt.Printf("%v\n", ToBytesSize(ts))
+	//fmt.Println(ts.String())
+	//
+	//bytes, pointIndex := ts.ToBytes(nil)
+	//fmt.Println(bytes)
+	//fmt.Println(pointIndex)
+	//
+	//newts := (*TestStruct)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data))
+	//fmt.Println(ts.String())
+	//fmt.Println(newts.String())
+	//
+	//clone := make([]byte, len(bytes))
+	//copy(clone, bytes)
+	//startAddr := uint64((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data)
+	//cloneStartAddr := uint64((*reflect.SliceHeader)(unsafe.Pointer(&clone)).Data)
+	//for _, addr := range pointIndex {
+	//	delt := byteOrder.Uint64(bytes[int(addr-startAddr):int(addr-startAddr)+8]) - startAddr
+	//	byteOrder.PutUint64(clone[int(addr-startAddr):int(addr-startAddr)+8], cloneStartAddr+delt)
+	//}
+	//
+	//newts2 := (*TestStruct)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&clone)).Data))
+	//
+	//fmt.Println(bytes)
+	//fmt.Println(pointIndex)
+	//fmt.Println(clone)
+	//
+	//fmt.Println(ts.String())
+	//fmt.Println(newts.String())
+	//fmt.Println(newts2.String())
+	//
+	//for i := 0; i < len(bytes); i++ {
+	//	bytes[i] = 0
+	//}
+	//
+	//fmt.Println(ts.String())
+	//fmt.Println(newts.String())
+	//fmt.Println(newts2.String())
 
 	//fmt.Printf("%v\n", ToBytesSize(ts))
 	//fmt.Printf("%v\n", unsafe.Sizeof(ts))
@@ -341,4 +340,22 @@ func main() {
 	//ts.IntPointField = &num
 	//fmt.Printf("%v\n", ts.ToBytesSize())
 
+	//bytes1 := make([]byte, 1024)
+	//bytes2 := make([]byte, 1024)
+	//copy(bytes2, bytes1)
+
+	type Test struct {
+		a int
+		b int
+		c int
+	}
+
+	t := &Test{a: 1, b: 2, c: 3}
+	bytes := make([]byte, unsafe.Sizeof(*t))
+	newT := (*Test)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data))
+	newT.a = t.a
+	newT.b = t.b
+	newT.c = t.c
+	newT2 := (*Test)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&bytes)).Data))
+	fmt.Println(newT2)
 }
